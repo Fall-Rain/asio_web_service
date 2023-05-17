@@ -7,8 +7,7 @@
 
 typedef std::string string;
 
-Session::Session(
-        boost::asio::ip::tcp::socket &socket) : client_socket_(std::move(socket)) {}
+Session::Session(boost::asio::ip::tcp::socket &socket) : client_socket_(std::move(socket)) {}
 
 
 void Session::start() {
@@ -36,7 +35,6 @@ void Session::do_read() {
                                                            boost::token_compress_on);
                                               self->header_map.insert(std::pair<string, string>(header[0], header[1]));
                                           });
-
 
 
                                           std::cout << "请求头" << std::endl;
