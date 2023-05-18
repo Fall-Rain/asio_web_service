@@ -2,18 +2,21 @@
 // Created by fallrain on 2023/5/18.
 //
 #include "business_logic.h"
+
 std::map<std::string, FunctionPtr> business_logic::function_map;
+
 void business_logic::register_handle(std::string handle_name, FunctionPtr function) {
     function_map[handle_name] = function;
 }
 
-FunctionPtr business_logic::process_request(std::string handle_name) {
-    auto func = function_map.find(handle_name);
+http_response_struct business_logic::process_request(http_request_struct request) {
+    auto func = function_map.find(request.uri);
     if (func != function_map.end()) {
-        return func->second;
+        return func->second(request);
     } else {
-        return [](const std::string body, std::map<std::string, std::string> headers) {
-            return body;
-        };
+        http_response_struct response;
+        response.http_status = HttpStatusCode::NOT_FOUND;
+        return response;
     }
 }
+

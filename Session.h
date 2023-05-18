@@ -10,6 +10,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include "boost/algorithm/string.hpp"
 #include "business_logic.h"
+#include "http_struct.h"
 
 #define ASIO_DEMO_SESSION_H
 
@@ -26,10 +27,15 @@ private:
 
     void do_write();
 
+    http_request_struct request;
+
+    http_response_struct response;
+
     boost::asio::ip::tcp::socket client_socket_;
     boost::asio::streambuf client_buffer_;
-    std::map<std::string, std::string> headers;
-    std::string request_body, response_body, method, uri, http_version;
+//
+//    std::map<std::string, std::string> headers;
+//    std::string request_body, response_body, method, uri, http_version;
 };
 
 

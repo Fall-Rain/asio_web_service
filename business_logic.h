@@ -7,16 +7,16 @@
 
 #include <functional>
 #include "map"
+#include "http_struct.h"
 
-
-typedef std::function<std::string(const std::string &, std::map<std::string, std::string>)> FunctionPtr;
+typedef std::function<http_response_struct(http_request_struct)> FunctionPtr;
 
 
 class business_logic {
 public:
     static void register_handle(std::string handle_name, FunctionPtr function);
 
-    static FunctionPtr process_request(std::string handle_name);
+    static http_response_struct process_request(http_request_struct request);
 
 private:
     static std::map<std::string, FunctionPtr> function_map;
