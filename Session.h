@@ -9,9 +9,9 @@
 #include "iostream"
 #include <boost/asio/ip/tcp.hpp>
 #include "boost/algorithm/string.hpp"
+#include "business_logic.h"
 
 #define ASIO_DEMO_SESSION_H
-
 
 class Session : public std::enable_shared_from_this<Session> {
 public:
@@ -20,6 +20,7 @@ public:
 
     void start();
 
+
 private:
     void do_read();
 
@@ -27,8 +28,8 @@ private:
 
     boost::asio::ip::tcp::socket client_socket_;
     boost::asio::streambuf client_buffer_;
-    std::map<std::string, std::string> header_map;
-    std::string request_body;
+    std::map<std::string, std::string> headers;
+    std::string request_body, response_body, method, uri, http_version;
 };
 
 
