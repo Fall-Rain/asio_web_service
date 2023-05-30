@@ -22,25 +22,9 @@ void Server::do_accept() {
     acceptor_.async_accept(
             [this](std::error_code ec, boost::asio::ip::tcp::socket socket) {
                 if (!ec) {
-//                    pool.post([&socket] {
-//                        std::make_shared<Session>(socket)->start();
-//                    });
-
                     pool.post([session = std::make_shared<Session>(socket)] {
                         session->start();
                     });
-
-//                    std::make_shared<Session>(
-//                            static_cast<boost::asio::io_context &>(acceptor_.get_executor().context()))->start(socket);
-
-//                    boost::asio::post(pool,
-//                                      [=]() {
-//                                          std::make_shared<Session>(
-//                                                  static_cast<boost::asio::io_context &>(acceptor_.get_executor().context()))->start(
-//                                                  socket);
-//                                      },
-//                                      std::move(socket));
-//                    boost::asio::post(pool, [] {});
                 }
                 do_accept();
             });

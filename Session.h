@@ -11,6 +11,9 @@
 #include "boost/algorithm/string.hpp"
 #include "business_logic.h"
 #include "http_struct.h"
+#include "numeric"
+#include "boost/beast.hpp"
+#include "cctype"
 
 #define ASIO_DEMO_SESSION_H
 
@@ -26,6 +29,12 @@ private:
     void do_read();
 
     void do_write();
+
+    void process_params();
+
+    void process_headers();
+
+    void process_content_type();
 
     http_request_struct request;
 

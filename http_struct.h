@@ -5,6 +5,7 @@
 #ifndef ASIO_DEMO_HTTP_STRUCT_H
 #define ASIO_DEMO_HTTP_STRUCT_H
 
+#include <boost/property_tree/ptree.hpp>
 #include "map"
 
 
@@ -17,7 +18,6 @@ enum class HttpStatusCode {
     INTERNAL_SERVER_ERROR = 500
 };
 
-extern std::map<HttpStatusCode, std::string> httpStatusToString;
 
 enum class ContentType {
     TEXT_PLAIN,
@@ -26,13 +26,23 @@ enum class ContentType {
     APPLICATION_XML
 };
 
-extern std::map<ContentType, std::string> contentTypeToString;
+enum class HttpMethod {
+    GET, POST, HEAD, OPTION, PUT, DELECT, TRACE, CONNECT
+};
 
+extern std::map<HttpStatusCode, std::string> httpStatusToString;
+extern std::map<ContentType, std::string> contentTypeToString;
+//extern std::map<HttpMethod, std::string> httpMethodToString;
+extern std::map<std::string, HttpMethod> stringToHttpMethod;
 
 struct http_request_struct {
     std::map<std::string, std::string> headers;
+    std::map<std::string, std::string> params;
+    std::map<std::string, std::string> form_data;
+    boost::property_tree::ptree ptree;
+    HttpMethod method;
     std::string body;
-    std::string method, uri, http_version;
+    std::string uri, http_version;
 };
 
 struct http_response_struct {

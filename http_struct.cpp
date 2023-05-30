@@ -17,3 +17,15 @@ std::map<ContentType, std::string> contentTypeToString = {
         {ContentType::APPLICATION_JSON, "application/json"},
         {ContentType::APPLICATION_XML,  "application/xml"}
 };
+
+
+std::map<std::string, HttpMethod> stringToHttpMethod = {
+        {"GET",     HttpMethod::GET},
+        {"POST",    HttpMethod::POST},
+        {"HEAD",    HttpMethod::HEAD},
+        {"OPTION",  HttpMethod::OPTION},
+        {"PUT",     HttpMethod::PUT},
+        {"DELECT",  HttpMethod::DELECT},
+        {"TRACE",   HttpMethod::TRACE},
+        {"CONNECT", HttpMethod::CONNECT}
+};
