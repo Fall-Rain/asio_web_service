@@ -15,6 +15,8 @@ std::map<HttpMethod, std::map<std::string, FunctionPtr>> business_logic::functio
         {HttpMethod::CONNECT, {}}
 };
 
+std::map<std::string, std::map<std::string, std::string >> business_logic::session_map;
+
 void business_logic::register_handle(HttpMethod httpMethod, std::string handle_name, FunctionPtr function) {
     function_map[httpMethod][handle_name] = function;
 }
@@ -30,11 +32,18 @@ http_response_struct business_logic::process_request(http_request_struct request
     if (func != function_map.find(request.method)->second.end()) {
         return func->second(request);
     }
-
     if (request.method == HttpMethod::GET) {
+        for (const auto &item: session_map[request.session_id]) {
+            std::cout << item.first << "=" << item.second << std::endl;
+        }
+
         std::string filePath = "/var/www/html" + uri;
-        std::ifstream file_stream(filePath);
-        if (file_stream.good()) {
+        if (std::filesystem::is_directory(std::filesystem::path(filePath))) {
+            filePath += "index.html";
+        }
+
+        if (std::filesystem::exists(std::filesystem::path(filePath))) {
+            std::ifstream file_stream(filePath);
             if (file_stream.is_open()) {
                 http_response_struct response;
                 response.body.assign(std::istreambuf_iterator<char>(file_stream), std::istreambuf_iterator<char>());
@@ -52,3 +61,13 @@ http_response_struct business_logic::process_request(http_request_struct request
 
 }
 
+std::string business_logic::create_session_map() {
+    boost::uuids::uuid uuid = boost::uuids::random_generator()();
+    std::string uuidStr = boost::uuids::to_string(uuid);
+    session_map[uuidStr] = {};
+    return uuidStr;
+}
+
+std::map<std::string, std::string> &business_logic::get_session_map(std::string cookie_id) {
+    return session_map[cookie_id];
+}

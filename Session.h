@@ -40,6 +40,7 @@ private:
 
     http_response_struct response;
 
+
     boost::asio::ip::tcp::socket client_socket_;
     boost::asio::streambuf client_buffer_;
 //

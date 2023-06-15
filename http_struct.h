@@ -11,6 +11,7 @@
 
 enum class HttpStatusCode {
     OK = 200,
+    FOUND = 302,
     BAD_REQUEST = 400,
     UNAUTHORIZED = 401,
     FORBIDDEN = 403,
@@ -35,11 +36,14 @@ extern std::map<ContentType, std::string> contentTypeToString;
 //extern std::map<HttpMethod, std::string> httpMethodToString;
 extern std::map<std::string, HttpMethod> stringToHttpMethod;
 
+
 struct http_request_struct {
     std::map<std::string, std::string> headers;
     std::map<std::string, std::string> params;
     std::map<std::string, std::string> form_data;
+    std::map<std::string, std::string> cookie;
     boost::property_tree::ptree ptree;
+    std::string session_id;
     HttpMethod method;
     std::string body;
     std::string uri, http_version;
@@ -47,6 +51,7 @@ struct http_request_struct {
 
 struct http_response_struct {
     std::map<std::string, std::string> headers;
+    std::map<std::string, std::string> cookie;
     std::string body;
     ContentType content_type = ContentType::TEXT_HTML;
     HttpStatusCode http_status = HttpStatusCode::OK;

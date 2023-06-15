@@ -14,5 +14,5 @@ set(CMAKE_CXX_STANDARD 17)
 #link_directories(${Boost_LIBRARY_DIRS})
 
 
-add_executable(asio_demo main.cpp ThreadPool.cpp ThreadPool.h Session.cpp Session.h Server.cpp Server.h business_logic.h business_logic.cpp http_struct.h http_struct.cpp)
+add_executable(asio_demo main.cpp ThreadPool.cpp ThreadPool.h Session.cpp Session.h Server.cpp Server.h business_logic.h business_logic.cpp http_struct.h http_struct.cpp user.cpp user.h)
 target_link_libraries(asio_demo Boost::system Boost::thread OpenSSL::SSL OpenSSL::Crypto)

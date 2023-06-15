@@ -11,6 +11,10 @@
 #include "http_struct.h"
 #include "boost/property_tree/json_parser.hpp"
 #include "boost/property_tree/xml_parser.hpp"
+#include "boost/uuid/uuid.hpp"
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <filesystem>
 
 typedef std::function<http_response_struct(http_request_struct)> FunctionPtr;
 
@@ -21,7 +25,15 @@ public:
 
     static http_response_struct process_request(http_request_struct request);
 
+    static std::string create_session_map();
+
+    static std::map<std::string, std::string>& get_session_map(std::string cookie_id);
+
+
 private:
+
+    static std::map<std::string, std::map<std::string, std::string >> session_map;
+
     static std::map<HttpMethod, std::map<std::string, FunctionPtr>> function_map;
 };
 
