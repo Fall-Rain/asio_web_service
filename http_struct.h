@@ -50,6 +50,14 @@ struct http_request_struct {
 };
 
 struct http_response_struct {
+    http_response_struct(std::string body);
+
+    http_response_struct(std::string body, ContentType content_type);
+
+    http_response_struct(HttpStatusCode http_status);
+
+    http_response_struct();
+
     std::map<std::string, std::string> headers;
     std::map<std::string, std::string> cookie;
     std::string body;

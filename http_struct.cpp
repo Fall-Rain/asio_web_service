@@ -31,3 +31,15 @@ std::map<std::string, HttpMethod> stringToHttpMethod = {
         {"CONNECT", HttpMethod::CONNECT}
 };
 
+http_response_struct::http_response_struct(std::string body) : body(body) {}
+
+http_response_struct::http_response_struct(std::string body, ContentType content_type) : body(body),
+                                                                                         content_type(content_type) {}
+
+http_response_struct::http_response_struct(HttpStatusCode http_status) : http_status(http_status) {}
+
+
+
+http_response_struct::http_response_struct() {}
+
+

@@ -45,20 +45,15 @@ http_response_struct business_logic::process_request(http_request_struct request
         if (std::filesystem::exists(std::filesystem::path(filePath))) {
             std::ifstream file_stream(filePath);
             if (file_stream.is_open()) {
-                http_response_struct response;
-                response.body.assign(std::istreambuf_iterator<char>(file_stream), std::istreambuf_iterator<char>());
-                file_stream.close();
-                return response;
+                std::ostringstream ss;
+                ss << file_stream.rdbuf();
+                return http_response_struct(ss.str());
             } else {
                 std::cout << "Failed to open file: " << filePath << std::endl;
             }
         }
     }
-
-    http_response_struct response;
-    response.http_status = HttpStatusCode::NOT_FOUND;
-    return response;
-
+    return http_response_struct(HttpStatusCode::NOT_FOUND);
 }
 
 std::string business_logic::create_session_map() {

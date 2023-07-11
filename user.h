@@ -12,11 +12,14 @@
 
 class user {
 public:
-    user(std::string id,std::string username,std::string password);
+    user(std::string id, std::string username, std::string password, std::string name);
+
     boost::property_tree::ptree to_json();
+
     std::string id;
     std::string username;
     std::string password;
+    std::string name;
 };
 
 
