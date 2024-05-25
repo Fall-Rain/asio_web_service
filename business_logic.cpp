@@ -20,8 +20,8 @@ std::map<std::string, std::map<std::string, std::string >> business_logic::sessi
 
 std::string business_logic::root;
 
-void business_logic::set_root(std::string root) {
-    root = root;
+void business_logic::set_root(const std::string &value) {
+    root = value; // 设置根路径
 }
 
 void business_logic::register_handle(HttpMethod httpMethod, const std::string &handle_name, FunctionPtr function) {

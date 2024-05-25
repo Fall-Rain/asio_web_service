@@ -27,16 +27,16 @@ public:
 
     static std::string create_session_map();
 
-    static std::map <std::string, std::string> &get_session_map(const std::string &cookie_id);
+    static std::map<std::string, std::string> &get_session_map(const std::string &cookie_id);
 
-    static void set_root(std::string root);
+    static void set_root(const std::string &value);
 
 private:
 
     static std::string root;
-    static std::map <std::string, std::map<std::string, std::string >> session_map;
+    static std::map<std::string, std::map<std::string, std::string >> session_map;
 
-    static std::map <HttpMethod, std::map<std::string, FunctionPtr>> function_map;
+    static std::map<HttpMethod, std::map<std::string, FunctionPtr>> function_map;
 };
 
 
