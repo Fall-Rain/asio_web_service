@@ -12,31 +12,31 @@ int main() {
             {"4", "user4", "user4", "用户3"}
     };
     business_logic::register_handle(HttpMethod::POST, "/login",
-                                    [&userVec](http_request_struct request) -> http_response_struct {
+                                    [&userVec](const http_request_struct &request) -> http_response_struct {
                                         std::stringstream stringstream;
-                                        std::string username = request.ptree.get<std::string>("username");
-                                        std::string password = request.ptree.get<std::string>("password");
+                                        auto username = request.ptree.get<std::string>("username");
+                                        auto password = request.ptree.get<std::string>("password");
                                         for (auto &item: userVec) {
-                                            if (item.username == username && item.password == item.password) {
+                                            if (item.username == username && item.password == password) {
                                                 business_logic::get_session_map(
                                                         request.session_id)["username"] = item.username;
                                                 boost::property_tree::ptree ptree;
-                                                return http_response_struct(
+                                                return {
                                                         result("登录成功", item.to_json(), 200).to_json_string(),
-                                                        ContentType::APPLICATION_JSON);
+                                                        ContentType::APPLICATION_JSON};
                                             }
                                         }
-                                        return http_response_struct(
+                                        return {
                                                 result("用户名密码错误", 401).to_json_string(),
-                                                ContentType::APPLICATION_JSON);
+                                                ContentType::APPLICATION_JSON};
                                     });
     business_logic::register_handle(HttpMethod::POST, "/body",
-                                    [&userVec](http_request_struct request) -> http_response_struct {
+                                    [&userVec](const http_request_struct &request) -> http_response_struct {
                                         std::map<std::string, std::string> session = business_logic::get_session_map(
                                                 request.session_id);
                                         if (session.find("username") == session.end()) {
-                                            return http_response_struct(result("用户未登录", 401).to_json_string(),
-                                                                        ContentType::APPLICATION_JSON);
+                                            return {result("用户未登录", 401).to_json_string(),
+                                                    ContentType::APPLICATION_JSON};
                                         }
 
                                         boost::property_tree::ptree ptree, childen;
@@ -44,11 +44,10 @@ int main() {
                                             childen.push_back(std::make_pair("", item.to_json()));
                                         }
                                         ptree.add_child("userList", childen);
-
-                                        return http_response_struct(result("获取成功", ptree, 200).to_json_string(),
-                                                                    ContentType::APPLICATION_JSON);
+                                        return {result("获取成功", ptree, 200).to_json_string(),
+                                                ContentType::APPLICATION_JSON};
                                     });
-
+    business_logic::set_root("/var/www/html");
     boost::asio::io_context io_context;
     Server server(io_context, 8090);
     server.start();

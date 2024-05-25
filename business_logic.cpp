@@ -2,6 +2,7 @@
 // Created by fallrain on 2023/5/18.
 //
 #include <iostream>
+#include <utility>
 #include "business_logic.h"
 
 std::map<HttpMethod, std::map<std::string, FunctionPtr>> business_logic::function_map = {
@@ -17,11 +18,17 @@ std::map<HttpMethod, std::map<std::string, FunctionPtr>> business_logic::functio
 
 std::map<std::string, std::map<std::string, std::string >> business_logic::session_map;
 
-void business_logic::register_handle(HttpMethod httpMethod, std::string handle_name, FunctionPtr function) {
-    function_map[httpMethod][handle_name] = function;
+std::string business_logic::root;
+
+void business_logic::set_root(std::string root) {
+    root = root;
 }
 
-http_response_struct business_logic::process_request(http_request_struct request) {
+void business_logic::register_handle(HttpMethod httpMethod, const std::string &handle_name, FunctionPtr function) {
+    function_map[httpMethod][handle_name] = std::move(function);
+}
+
+http_response_struct business_logic::process_request(const http_request_struct &request) {
     std::string uri = request.uri;
     size_t pos = uri.find("?");
     if (pos != std::string::npos) {
@@ -37,7 +44,7 @@ http_response_struct business_logic::process_request(http_request_struct request
             std::cout << item.first << "=" << item.second << std::endl;
         }
 
-        std::string filePath = "/var/www/html" + uri;
+        std::string filePath = root + uri;
         if (std::filesystem::is_directory(std::filesystem::path(filePath))) {
             filePath += "index.html";
         }
@@ -47,13 +54,13 @@ http_response_struct business_logic::process_request(http_request_struct request
             if (file_stream.is_open()) {
                 std::ostringstream ss;
                 ss << file_stream.rdbuf();
-                return http_response_struct(ss.str());
+                return {ss.str()};
             } else {
                 std::cout << "Failed to open file: " << filePath << std::endl;
             }
         }
     }
-    return http_response_struct(HttpStatusCode::NOT_FOUND);
+    return {HttpStatusCode::NOT_FOUND};
 }
 
 std::string business_logic::create_session_map() {
@@ -63,6 +70,6 @@ std::string business_logic::create_session_map() {
     return uuidStr;
 }
 
-std::map<std::string, std::string> &business_logic::get_session_map(std::string cookie_id) {
+std::map<std::string, std::string> &business_logic::get_session_map(const std::string &cookie_id) {
     return session_map[cookie_id];
 }
