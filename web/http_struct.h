@@ -28,13 +28,13 @@ enum class ContentType {
 };
 
 enum class HttpMethod {
-    GET, POST, HEAD, OPTION, PUT, DELECT, TRACE, CONNECT
+    GET, POST, HEAD, OPTIONS, PUT, DELECT, TRACE, CONNECT
 };
 
 extern std::map<HttpStatusCode, std::string> httpStatusToString;
 extern std::map<ContentType, std::string> contentTypeToString;
 //extern std::map<HttpMethod, std::string> httpMethodToString;
-extern std::map<std::string, HttpMethod> stringToHttpMethod;
+extern const std::map<std::string, HttpMethod> stringToHttpMethod;
 
 
 struct http_request_struct {

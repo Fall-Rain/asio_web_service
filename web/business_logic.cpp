@@ -5,18 +5,18 @@
 #include <utility>
 #include "business_logic.h"
 
-std::map<HttpMethod, std::map<std::string, FunctionPtr>> business_logic::function_map = {
-        {HttpMethod::GET,     {}},
-        {HttpMethod::POST,    {}},
-        {HttpMethod::HEAD,    {}},
-        {HttpMethod::OPTION,  {}},
-        {HttpMethod::PUT,     {}},
-        {HttpMethod::DELECT,  {}},
-        {HttpMethod::TRACE,   {}},
-        {HttpMethod::CONNECT, {}}
+std::map<HttpMethod, std::map<std::string, FunctionPtr> > business_logic::function_map = {
+    {HttpMethod::GET, {}},
+    {HttpMethod::POST, {}},
+    {HttpMethod::HEAD, {}},
+    {HttpMethod::OPTIONS, {}},
+    {HttpMethod::PUT, {}},
+    {HttpMethod::DELECT, {}},
+    {HttpMethod::TRACE, {}},
+    {HttpMethod::CONNECT, {}}
 };
 
-std::map<std::string, std::map<std::string, std::string >> business_logic::session_map;
+std::map<std::string, std::map<std::string, std::string> > business_logic::session_map;
 
 std::string business_logic::root;
 
@@ -60,6 +60,11 @@ http_response_struct business_logic::process_request(const http_request_struct &
             }
         }
     }
+
+    if (request.method == HttpMethod::OPTIONS) {
+        return {};
+    }
+
     return {HttpStatusCode::NOT_FOUND};
 }
 

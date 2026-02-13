@@ -11,18 +11,18 @@
 
 class ThreadPool {
 public:
-    ThreadPool(std::size_t size);
+    ThreadPool(std::size_t size, boost::asio::io_context &io_context);
 
     template<typename T>
     void post(T &&task) {
-        io_context_.post(std::forward<T>(task));
+        boost::asio::post(io_context_, std::forward<T>(task));
     }
 
     void stop();
 
 private:
-    boost::asio::io_context io_context_;
-    boost::asio::io_context::work work_;
+    boost::asio::io_context &io_context_;
+    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_;
     std::vector<std::thread> threads_;
 };
 

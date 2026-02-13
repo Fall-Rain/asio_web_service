@@ -5,7 +5,6 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 
 find_package(OpenSSL REQUIRED)
 
-find_package (cppnetlib 0.13.0 REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -16,13 +15,13 @@ set(CMAKE_CXX_STANDARD 17)
 #link_directories(${Boost_LIBRARY_DIRS})
 
 
-add_executable(asio_demo main.cpp ThreadPool.cpp ThreadPool.h Session.cpp Session.h Server.cpp Server.h business_logic.h business_logic.cpp http_struct.h http_struct.cpp user.cpp user.h result.cpp result.h)
+add_executable(asio_demo
+        main.cpp web/ThreadPool.cpp web/ThreadPool.h web/Session.cpp web/Session.h web/Server.cpp web/Server.h web/business_logic.h web/business_logic.cpp web/http_struct.h web/http_struct.cpp entity/user.cpp entity/user.h web/result.cpp web/result.h
+        dao.cpp
+        dao.h)
 target_link_libraries(asio_demo
         Boost::system
         Boost::thread
         OpenSSL::SSL
         OpenSSL::Crypto
-        cppnetlib-uri
-        cppnetlib-client-connections
-        cppnetlib-server-parsers
 )
