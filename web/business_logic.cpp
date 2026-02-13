@@ -5,6 +5,8 @@
 #include <utility>
 #include "business_logic.h"
 
+#include <optional>
+
 std::map<HttpMethod, std::map<std::string, FunctionPtr> > business_logic::function_map = {
     {HttpMethod::GET, {}},
     {HttpMethod::POST, {}},
@@ -75,6 +77,12 @@ std::string business_logic::create_session_map() {
     return uuidStr;
 }
 
-std::map<std::string, std::string> &business_logic::get_session_map(const std::string &cookie_id) {
-    return session_map[cookie_id];
+std::optional<std::reference_wrapper<std::map<std::string, std::string> > > business_logic::get_session_map(
+    const std::string &cookie_id) {
+    auto session = session_map.find(cookie_id);
+    if (session != session_map.end()) {
+        return session->second;
+    }
+    return std::nullopt;
+    // return session_map[cookie_id];
 }

@@ -15,28 +15,28 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <filesystem>
+#include <optional>
 
 typedef std::function<http_response_struct(http_request_struct)> FunctionPtr;
 
 class business_logic {
 public:
-
     static void register_handle(HttpMethod httpMethod, const std::string &handle_name, FunctionPtr function);
 
     static http_response_struct process_request(const http_request_struct &request);
 
     static std::string create_session_map();
 
-    static std::map<std::string, std::string> &get_session_map(const std::string &cookie_id);
+    static std::optional<std::reference_wrapper<std::map<std::string, std::string> > > get_session_map(
+        const std::string &cookie_id);
 
     static void set_root(const std::string &value);
 
 private:
-
     static std::string root;
-    static std::map<std::string, std::map<std::string, std::string >> session_map;
+    static std::map<std::string, std::map<std::string, std::string> > session_map;
 
-    static std::map<HttpMethod, std::map<std::string, FunctionPtr>> function_map;
+    static std::map<HttpMethod, std::map<std::string, FunctionPtr> > function_map;
 };
 
 

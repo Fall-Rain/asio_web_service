@@ -17,8 +17,9 @@ int main() {
                                             };
                                         }
                                         if (user->password == password) {
-                                            business_logic::get_session_map(request.session_id)["username"] = user->
-                                                    username;
+                                            // business_logic::get_session_map(request.session_id)["username"] = user->
+                                            // username;
+                                            business_logic::get_session_map(request.session_id)->get()["username"] = user->username;
                                             return {
                                                 result("登录成功", user->to_json(), 200).to_json_string(),
                                                 ContentType::APPLICATION_JSON
@@ -32,9 +33,9 @@ int main() {
                                     });
     business_logic::register_handle(HttpMethod::POST, "/body",
                                     [](const http_request_struct &request) -> http_response_struct {
-                                        std::map<std::string, std::string> session = business_logic::get_session_map(
+                                        auto session = business_logic::get_session_map(
                                             request.session_id);
-                                        if (session.find("username") == session.end()) {
+                                        if (!session) {
                                             return {
                                                 result("用户未登录", 401).to_json_string(),
                                                 ContentType::APPLICATION_JSON
