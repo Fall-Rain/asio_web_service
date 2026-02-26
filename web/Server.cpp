@@ -3,6 +3,7 @@
 //
 
 #include "Server.h"
+#include "middleware/cookie_middleware.h"
 
 Server::Server(boost::asio::io_context &io_context, std::uint16_t port) : acceptor_(io_context,
                                                                               boost::asio::ip::tcp::endpoint(

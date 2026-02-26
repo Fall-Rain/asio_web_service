@@ -62,7 +62,6 @@ http_response_struct business_logic::process_request(const http_request_struct &
             }
         }
     }
-
     if (request.method == HttpMethod::OPTIONS) {
         return {};
     }

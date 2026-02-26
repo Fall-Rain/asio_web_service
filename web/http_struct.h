@@ -31,9 +31,9 @@ enum class HttpMethod {
     GET, POST, HEAD, OPTIONS, PUT, DELECT, TRACE, CONNECT
 };
 
-extern std::map<HttpStatusCode, std::string> httpStatusToString;
-extern std::map<ContentType, std::string> contentTypeToString;
-//extern std::map<HttpMethod, std::string> httpMethodToString;
+extern const std::map<HttpStatusCode, std::string> httpStatusToString;
+extern const std::map<ContentType, std::string> contentTypeToString;
+extern const std::map<HttpMethod, std::string> httpMethodToString;
 extern const std::map<std::string, HttpMethod> stringToHttpMethod;
 
 
@@ -46,7 +46,10 @@ struct http_request_struct {
     std::string session_id;
     HttpMethod method;
     std::string body;
-    std::string uri, http_version;
+    std::string uri;
+    std::string http_version;
+    std::string http_body;
+    std::string to_http_string();
 };
 
 struct http_response_struct {
@@ -57,6 +60,8 @@ struct http_response_struct {
     http_response_struct(HttpStatusCode http_status);
 
     http_response_struct();
+
+    std::string to_http_string();
 
     std::map<std::string, std::string> headers;
     std::map<std::string, std::string> cookie;

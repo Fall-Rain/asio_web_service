@@ -19,7 +19,8 @@ int main() {
                                         if (user->password == password) {
                                             // business_logic::get_session_map(request.session_id)["username"] = user->
                                             // username;
-                                            business_logic::get_session_map(request.session_id)->get()["username"] = user->username;
+                                            business_logic::get_session_map(request.session_id)->get()["username"] =
+                                                    user->username;
                                             return {
                                                 result("登录成功", user->to_json(), 200).to_json_string(),
                                                 ContentType::APPLICATION_JSON
@@ -35,12 +36,13 @@ int main() {
                                     [](const http_request_struct &request) -> http_response_struct {
                                         auto session = business_logic::get_session_map(
                                             request.session_id);
-                                        if (!session) {
+                                        if (session->get().find("username") == session->get().end()) {
                                             return {
                                                 result("用户未登录", 401).to_json_string(),
                                                 ContentType::APPLICATION_JSON
                                             };
                                         }
+                                        std::cout << "当前登录用户" << session->get()["username"];
                                         return {
                                             result("获取成功", dao::getList(), 200).to_json_string(),
                                             ContentType::APPLICATION_JSON

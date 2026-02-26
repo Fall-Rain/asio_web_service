@@ -18,7 +18,15 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(asio_demo
         main.cpp web/ThreadPool.cpp web/ThreadPool.h web/Session.cpp web/Session.h web/Server.cpp web/Server.h web/business_logic.h web/business_logic.cpp web/http_struct.h web/http_struct.cpp entity/user.cpp entity/user.h web/result.cpp web/result.h
         dao.cpp
-        dao.h)
+        dao.h
+        web/middleware/process_params_middleware.h
+        web/middleware/process_content_type_middleware.h
+        web/middleware/cros_middleware.h
+        web/middleware/cookie_middleware.h
+        web/middleware/session_middleware.h
+        web/middleware/middleware.h
+        web/middleware/log_middleware.h
+)
 target_link_libraries(asio_demo
         Boost::system
         Boost::thread
