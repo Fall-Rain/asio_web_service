@@ -27,6 +27,7 @@ public:
 
     void run_middlewares();
 
+
     //请求头
     http_request_struct request;
     //应大头
@@ -36,8 +37,16 @@ private:
     //读取请求
     void do_read();
 
+    void do_read_header();
+    void do_read_body();
+
     //写入请求
     void do_write();
+
+    //客户端socket
+    boost::asio::ip::tcp::socket client_socket_;
+    //客服端的buffer
+    boost::asio::streambuf client_buffer_;
 
     //处理参数
     // void process_params();
@@ -46,12 +55,7 @@ private:
     // void process_content_type();
 
 
-    //客户端socket
-    boost::asio::ip::tcp::socket client_socket_;
-    //客服端的buffer
-    boost::asio::streambuf client_buffer_;
-
-    std::vector<std::shared_ptr<middleware>> middlewares_;
+    std::vector<std::shared_ptr<middleware> > middlewares_;
 
     void run_next(size_t index);
 };

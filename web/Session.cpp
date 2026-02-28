@@ -37,6 +37,7 @@ void Session::run_middlewares() {
     run_next(0);
 }
 
+
 void Session::run_next(size_t index) {
     if (index < middlewares_.size()) {
         middlewares_[index].get()->handle(shared_from_this(), [this,index] {
@@ -51,111 +52,103 @@ void Session::run_next(size_t index) {
     }
 }
 
+void Session::do_read_header() {
+    boost::asio::async_read_until(
+        client_socket_, client_buffer_, "\r\n\r\n",
+        // 读取完成后的回调函数
+        [self = shared_from_this()](std::error_code ec, std::size_t bytes_transferred) {
+            if (ec) {
+                return;
+            }
+            // 如果没有发生错误
+            // 将客户端缓冲区中的数据转换为字符串
+            std::string request_header(
+                boost::asio::buffers_begin(self->client_buffer_.data()),
+                boost::asio::buffers_begin(self->client_buffer_.data()) +
+                bytes_transferred);
+            self->client_buffer_.consume(bytes_transferred);
+
+            // 分割请求头字符串为单独的行
+            std::vector<string> header_vec;
+            boost::split(header_vec, request_header, boost::is_any_of("\r\n"),
+                         boost::token_compress_on);
+            // 解构请求结构体
+            auto &[headers, params, form_data, cookie_map, json_map, session_id, method,
+                body, uri, http_version,http_body] = self->request;
+            http_body = request_header;
+            // 分割请求行，提取方法、URI和HTTP版本
+            std::vector<string> line;
+            boost::split(line, header_vec[0], boost::is_any_of(" "));
+            method = stringToHttpMethod.at(line[0]), uri = line[1], http_version = line[2];
+            // 解析请求头部并填充请求结构体的headers成员
+            std::for_each(header_vec.begin() + 1, header_vec.end() - 1,
+                          [&](std::string v) {
+                              std::vector<string> header;
+                              boost::split(header, v, boost::is_any_of(":"),
+                                           boost::token_compress_on);
+                              // 移除头部值中的空白字符
+                              header[1].erase(std::remove_if(header[1].begin(),
+                                                             header[1].end(),
+                                                             [](unsigned char c) {
+                                                                 return std::isspace(c);
+                                                             }), header[1].end());
+                              // 填充请求头部到headers映射
+                              self->request.headers[header[0]] = header[1];
+                          });
+            self->do_read_body();
+        });
+}
+
+void Session::do_read_body() {
+    auto self = shared_from_this();
+    auto &[headers, params, form_data, cookie_map, json_map, session_id, method,
+        body, uri, http_version,http_body] = self->request;
+    // 检查是否有请求体
+    auto content_length_it = headers.find("Content-Length");
+    if (content_length_it == headers.end()) {
+        self->run_middlewares();
+        self->do_write();
+        return;
+    }
+
+    std::size_t content_length = std::stoi(content_length_it->second);
+
+    if (self->client_buffer_.size() >= content_length) {
+        body.assign(
+            boost::asio::buffers_begin(self->client_buffer_.data()),
+            boost::asio::buffers_begin(self->client_buffer_.data()) +
+            content_length);
+        self->client_buffer_.consume(content_length);
+        self->request.http_body += body;
+        self->run_middlewares();
+        self->do_write();
+        return;
+    }
+
+    boost::asio::async_read(
+        self->client_socket_, self->client_buffer_,
+        boost::asio::transfer_exactly(content_length),
+        [self,content_length](std::error_code ec, std::size_t size) {
+            if (ec) return;
+            auto &body = self->request.body;
+
+            body.assign(
+                boost::asio::buffers_begin(
+                    self->client_buffer_.data()),
+                boost::asio::buffers_begin(
+                    self->client_buffer_.data()) +
+                content_length
+            );
+            self->client_buffer_.consume(content_length);
+            self->request.http_body += body;
+            self->run_middlewares();
+            self->do_write();
+        });
+}
+
 // 执行读取操作，从客户端读取请求
 void Session::do_read() {
-    // 异步读取直到遇到"\r\n\r\n"，表示请求头结束
-    boost::asio::async_read_until(client_socket_, client_buffer_, "\r\n\r\n",
-                                  // 读取完成后的回调函数
-                                  [self = shared_from_this()](std::error_code ec, std::size_t bytes_transferred) {
-                                      if (!ec) {
-                                          // 如果没有发生错误
-                                          // 将客户端缓冲区中的数据转换为字符串
-                                          std::string request_header(
-                                              boost::asio::buffers_begin(self->client_buffer_.data()),
-                                              boost::asio::buffers_begin(self->client_buffer_.data()) +
-                                              bytes_transferred);
-                                          // 分割请求头字符串为单独的行
-                                          std::vector<string> header_vec;
-                                          boost::split(header_vec, request_header, boost::is_any_of("\r\n"),
-                                                       boost::token_compress_on);
-                                          // 解构请求结构体
-                                          auto &[headers, params, form_data, cookie_map, json_map, session_id, method,
-                                              body, uri, http_version,http_body] = self->request;
-                                          // 分割请求行，提取方法、URI和HTTP版本
-                                          std::vector<string> line;
-                                          boost::split(line, header_vec[0], boost::is_any_of(" "));
-                                          method = stringToHttpMethod.at(line[0]), uri = line[1], http_version = line[
-                                              2];
-                                          // 解析请求头部并填充请求结构体的headers成员
-                                          std::for_each(header_vec.begin() + 1, header_vec.end() - 1,
-                                                        [&](std::string v) {
-                                                            std::vector<string> header;
-                                                            boost::split(header, v, boost::is_any_of(":"),
-                                                                         boost::token_compress_on);
-                                                            // 移除头部值中的空白字符
-                                                            header[1].erase(std::remove_if(header[1].begin(),
-                                                                                header[1].end(),
-                                                                                [](unsigned char c) {
-                                                                                    return std::isspace(c);
-                                                                                }), header[1].end());
-                                                            // 填充请求头部到headers映射
-                                                            self->request.headers[header[0]] = header[1];
-                                                        });
-
-
-                                          // 检查是否有请求体
-                                          auto content_length = headers.find("Content-Length");
-                                          if (content_length != headers.end()) {
-                                              // 计算请求体中剩余的数据长度
-                                              std::size_t excess_data_length =
-                                                      self->client_buffer_.size() - bytes_transferred;
-                                              std::vector<char> excess_data(excess_data_length);
-                                              // 将多余的数据复制到excess_data中
-                                              boost::asio::buffer_copy(boost::asio::buffer(excess_data),
-                                                                       self->client_buffer_.data() + bytes_transferred);
-                                              // 将多余的数据添加到请求体中
-                                              body = string(excess_data.data(), excess_data_length);
-
-                                              // 计算需要读取的数据长度
-                                              size_t content_length = std::stoi(
-                                                  headers.find("Content-Length")->second);
-                                              if (content_length - body.size() > 0) {
-                                                  std::vector<char> buffer(content_length - body.size());
-                                                  boost::system::error_code error;
-                                                  // 从套接字中读取剩余的请求体数据
-                                                  size_t bytes_read = boost::asio::read(self->client_socket_,
-                                                      boost::asio::buffer(buffer),
-                                                      boost::asio::transfer_exactly(
-                                                          content_length -
-                                                          body.size()),
-                                                      error);
-                                                  if (!error) {
-                                                      // 将读取的数据附加到请求体中
-                                                      body.append(buffer.data(), bytes_read);
-                                                  } else {
-                                                      // 输出错误信息
-                                                      std::cout << "Error reading request body: " << error.message()
-                                                              << std::endl;
-                                                  }
-                                              }
-                                          }
-                                          http_body = request_header + body;
-                                          // 处理请求的参数和内容类型
-                                          // self->process_params();
-                                          // self->process_content_type();
-                                          self->run_middlewares();
-                                          self->do_write();
-                                          // try {
-                                          //     // 处理请求并获取响应
-                                          //     self->response = business_logic::process_request(self->request);
-                                          //     self->response.headers["Access-Control-Allow-Origin"] = "*"; // 允许所有域访问
-                                          //     self->response.headers["Access-Control-Allow-Methods"] =
-                                          //             "GET, POST, OPTIONS";
-                                          //     self->response.headers["Access-Control-Allow-Headers"] =
-                                          //             "Content-Type, Authorization";
-                                          //     // 如果请求中不包含会话ID，则将会话ID添加到响应的Cookie中
-                                          //     if (self->request.cookie.find("session") == cookie_map.end()) {
-                                          //         self->response.cookie["session"] = session_id;
-                                          //     }
-                                          // } catch (const std::exception &e) {
-                                          //     // 如果发生异常，将异常信息添加到响应体中
-                                          //     self->response.body = e.what();
-                                          // }
-                                          // // 执行写入操作，将响应发送给客户端
-                                          // self->do_write();
-                                      }
-                                  }
-    );
+    do_read_header();
 }
 
 
@@ -164,9 +157,7 @@ void Session::do_write() {
     // 异步写入响应到客户端
     boost::asio::async_write(client_socket_, boost::asio::buffer(shared_from_this()->response.to_http_string()),
                              [self = shared_from_this()](std::error_code ec, std::size_t length) {
-                                 if (!ec) {
-                                 } else {
-                                     // 如果发生错误，输出错误信息
+                                 if (ec) {
                                      std::cerr << "write to remote server error: " << ec.message() << std::endl;
                                  }
                              });
