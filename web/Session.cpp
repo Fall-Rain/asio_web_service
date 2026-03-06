@@ -4,14 +4,17 @@
 
 #include "Session.h"
 
+#include "websocket_session.h"
 #include "middleware/cookie_middleware.h"
 #include "middleware/cros_middleware.h"
 #include "middleware/log_middleware.h"
 #include "middleware/process_content_type_middleware.h"
 #include "middleware/process_params_middleware.h"
 #include "middleware/session_middleware.h"
+#include "middleware/websocket_middlesare.h"
 
 typedef std::string string;
+
 
 
 Session::Session(boost::asio::ip::tcp::socket &socket) : client_socket_(std::move(socket)) {
@@ -19,6 +22,7 @@ Session::Session(boost::asio::ip::tcp::socket &socket) : client_socket_(std::mov
     add_middleware(std::make_shared<process_content_type_middleware>());
     add_middleware(std::make_shared<log_middleware>());
     add_middleware(std::make_shared<cros_middleware>());
+    add_middleware(std::make_shared<websocket_middlesare>());
     add_middleware(std::make_shared<cookie_middleware>());
     add_middleware(std::make_shared<session_middleware>());
 }
@@ -95,40 +99,48 @@ void Session::do_read_header() {
                               // 填充请求头部到headers映射
                               self->request.headers[header[0]] = header[1];
                           });
+
             self->do_read_body();
         });
 }
 
 void Session::do_read_body() {
-    auto self = shared_from_this();
     auto &[headers, params, form_data, cookie_map, json_map, session_id, method,
-        body, uri, http_version,http_body] = self->request;
+        body, uri, http_version,http_body] = request;
     // 检查是否有请求体
     auto content_length_it = headers.find("Content-Length");
     if (content_length_it == headers.end()) {
-        self->run_middlewares();
-        self->do_write();
+        run_middlewares();
+        do_write();
+        if (upgrade_to_websocket) {
+            auto ws = std::make_shared<websocket_session>(client_socket_);
+            ws->start();
+        }
         return;
     }
 
     std::size_t content_length = std::stoi(content_length_it->second);
 
-    if (self->client_buffer_.size() >= content_length) {
+    if (client_buffer_.size() >= content_length) {
         body.assign(
-            boost::asio::buffers_begin(self->client_buffer_.data()),
-            boost::asio::buffers_begin(self->client_buffer_.data()) +
+            boost::asio::buffers_begin(client_buffer_.data()),
+            boost::asio::buffers_begin(client_buffer_.data()) +
             content_length);
-        self->client_buffer_.consume(content_length);
-        self->request.http_body += body;
-        self->run_middlewares();
-        self->do_write();
+        client_buffer_.consume(content_length);
+        request.http_body += body;
+        run_middlewares();
+        do_write();
+        if (upgrade_to_websocket) {
+            auto ws = std::make_shared<websocket_session>(client_socket_);
+            ws->start();
+        }
         return;
     }
 
     boost::asio::async_read(
-        self->client_socket_, self->client_buffer_,
+        client_socket_, client_buffer_,
         boost::asio::transfer_exactly(content_length),
-        [self,content_length](std::error_code ec, std::size_t size) {
+        [self = shared_from_this(),content_length](std::error_code ec, std::size_t size) {
             if (ec) return;
             auto &body = self->request.body;
 
@@ -143,6 +155,10 @@ void Session::do_read_body() {
             self->request.http_body += body;
             self->run_middlewares();
             self->do_write();
+            if (self->upgrade_to_websocket) {
+                auto ws = std::make_shared<websocket_session>(self->client_socket_);
+                ws->start();
+            }
         });
 }
 

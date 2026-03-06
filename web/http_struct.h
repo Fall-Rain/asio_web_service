@@ -10,6 +10,7 @@
 
 
 enum class HttpStatusCode {
+    SWITCHING_PROTOCOLS=101,
     OK = 200,
     FOUND = 302,
     BAD_REQUEST = 400,

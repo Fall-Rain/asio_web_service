@@ -6,6 +6,7 @@
 #include <boost/beast/http/message.hpp>
 
 const std::map<HttpStatusCode, std::string> httpStatusToString = {
+    {HttpStatusCode::SWITCHING_PROTOCOLS, "Switching Protocols"},
     {HttpStatusCode::OK, "OK"},
     {HttpStatusCode::BAD_REQUEST, "Bad Request"},
     {HttpStatusCode::UNAUTHORIZED, "Unauthorized"},
@@ -65,13 +66,20 @@ std::string http_response_struct::to_http_string() {
 
     // 构建响应头部
     response_stream << "HTTP/1.1" << " " << status_code << " " << status_string << "\r\n";
-    response_stream << "Content-Type: " << contentType << "\r\n";
-    response_stream << "Server: c++ server" << "\r\n";
+
+    if (headers.count("Server")) {
+        headers["Server"] = "c++ server";
+    }
+    if (body.size() > 0 && headers.count("Content-Type")) {
+        headers["Content-Type"] = contentTypeToString.at(ContentType::TEXT_HTML);
+    }
+    // response_stream << "Content-Type: " << contentType << "\r\n";
+    // response_stream << "Server: c++ server" << "\r\n";
     for (auto &item: headers) {
         response_stream << item.first << ": " << item.second << "\r\n";
     }
     // 如果内容类型为TEXT_HTML，则添加Content-Length头部
-    if (content_type == ContentType::TEXT_HTML) {
+    if (body.size() > 0) {
         response_stream << "Content-Length:" << body.size() << "\r\n";
     }
     response_stream << "\r\n"; // 空行，分隔头部和主体
