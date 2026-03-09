@@ -4,8 +4,6 @@
 #include "dao.h"
 
 int main() {
-
-
     business_logic::register_handle(
         HttpMethod::POST, "/login",
         [](const http_request_struct &request) -> http_response_struct {

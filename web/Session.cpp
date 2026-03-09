@@ -8,6 +8,7 @@
 #include "middleware/cookie_middleware.h"
 #include "middleware/cros_middleware.h"
 #include "middleware/log_middleware.h"
+#include "middleware/middleware_chain.h"
 #include "middleware/process_content_type_middleware.h"
 #include "middleware/process_params_middleware.h"
 #include "middleware/session_middleware.h"
@@ -16,45 +17,55 @@
 typedef std::string string;
 
 
-
 Session::Session(boost::asio::ip::tcp::socket &socket) : client_socket_(std::move(socket)) {
-    add_middleware(std::make_shared<process_params_middleware>());
-    add_middleware(std::make_shared<process_content_type_middleware>());
-    add_middleware(std::make_shared<log_middleware>());
-    add_middleware(std::make_shared<cros_middleware>());
-    add_middleware(std::make_shared<websocket_middlesare>());
-    add_middleware(std::make_shared<cookie_middleware>());
-    add_middleware(std::make_shared<session_middleware>());
+    // add_middleware(std::make_shared<process_params_middleware>());
+    // add_middleware(std::make_shared<process_content_type_middleware>());
+    // add_middleware(std::make_shared<log_middleware>());
+    // add_middleware(std::make_shared<cros_middleware>());
+    // add_middleware(std::make_shared<websocket_middlesare>());
+    // add_middleware(std::make_shared<cookie_middleware>());
+    // add_middleware(std::make_shared<session_middleware>());
 }
 
+void Session::run_middlewares() {
+    middleware_chain<
+        process_params_middleware,
+        process_content_type_middleware,
+        log_middleware,
+        cros_middleware,
+        websocket_middlesare,
+        cookie_middleware,
+        session_middleware
+    >::run(shared_from_this());
+}
 
 void Session::start() {
     do_read();
 }
 
 
-void Session::add_middleware(std::shared_ptr<middleware> m) {
-    middlewares_.push_back(m);
-}
-
-void Session::run_middlewares() {
-    run_next(0);
-}
-
-
-void Session::run_next(size_t index) {
-    if (index < middlewares_.size()) {
-        middlewares_[index].get()->handle(shared_from_this(), [this,index] {
-            run_next(index + 1);
-        });
-    } else {
-        try {
-            response = business_logic::process_request(request);
-        } catch (const std::exception &e) {
-            response.body = e.what();
-        }
-    }
-}
+// void Session::add_middleware(std::shared_ptr<middleware> m) {
+//     middlewares_.push_back(m);
+// }
+//
+// void Session::run_middlewares() {
+//     run_next(0);
+// }
+//
+//
+// void Session::run_next(size_t index) {
+//     if (index < middlewares_.size()) {
+//         middlewares_[index].get()->handle(shared_from_this(), [this,index] {
+//             run_next(index + 1);
+//         });
+//     } else {
+//         try {
+//             response = business_logic::process_request(request);
+//         } catch (const std::exception &e) {
+//             response.body = e.what();
+//         }
+//     }
+// }
 
 void Session::do_read_header() {
     boost::asio::async_read_until(

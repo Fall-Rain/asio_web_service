@@ -24,20 +24,13 @@ add_executable(asio_demo
         web/middleware/cros_middleware.h
         web/middleware/cookie_middleware.h
         web/middleware/session_middleware.h
-        web/middleware/middleware.h
         web/middleware/log_middleware.h
-        web/middleware/websocket_middlesare.cpp
         web/middleware/websocket_middlesare.h
-        web/middleware/cookie_middleware.cpp
-        web/middleware/cros_middleware.cpp
-        web/middleware/log_middleware.cpp
-        web/middleware/process_content_type_middleware.cpp
-        web/middleware/process_params_middleware.cpp
-        web/middleware/session_middleware.cpp
         web/websocket_session.cpp
         web/websocket_session.h
         web/websocket_struct.cpp
         web/websocket_struct.h
+        web/middleware/middleware_chain.h
 )
 target_link_libraries(asio_demo
         Boost::system

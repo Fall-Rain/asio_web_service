@@ -11,12 +11,15 @@
 #include "boost/algorithm/string.hpp"
 #include "business_logic.h"
 #include "http_struct.h"
-#include "numeric"
-#include "boost/beast.hpp"
-#include "cctype"
-#include "middleware/middleware.h"
 #define ASIO_DEMO_SESSION_H
 
+template<typename Derived>
+struct Middleware {
+    template<typename SessionType>
+    void operator()(SessionType &session) {
+        static_cast<Derived *>(this)->handle(session);
+    }
+};
 
 class Session : public std::enable_shared_from_this<Session> {
 public:
@@ -24,11 +27,6 @@ public:
 
     void start();
 
-    void add_middleware(std::shared_ptr<middleware> middleware_);
-
-    void run_middlewares();
-
-    template<typename... Middlewares>
     void run_middlewares();
 
     //请求头
@@ -56,10 +54,6 @@ private:
     boost::asio::ip::tcp::socket client_socket_;
     //客服端的buffer
     boost::asio::streambuf client_buffer_;
-
-    std::vector<std::shared_ptr<middleware> > middlewares_;
-
-    void run_next(size_t index);
 };
 
 #endif //ASIO_DEMO_SESSION_H
