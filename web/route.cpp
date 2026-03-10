@@ -23,7 +23,6 @@ void route::get(std::string path, http_handler handler) {
 }
 
 void route::ws(std::string path, websocket_handler handler) {
-
     register_route(path, handler);
 }
 

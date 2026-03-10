@@ -11,12 +11,6 @@
 #include "Server.h"
 #include "iostream"
 
-// websocket_session::websocket_session(boost::asio::ip::tcp::socket &socket, http_request_struct http_request_struct)
-//     : socket_(std::move(socket)) {
-//     on_handshake_(http_request_struct);
-// }
-
-
 
 websocket_session::websocket_session(boost::asio::ip::tcp::socket socket, http_request_struct http_request_struct,
                                      websocket_handler websocket_handler,
@@ -24,7 +18,7 @@ websocket_session::websocket_session(boost::asio::ip::tcp::socket socket, http_r
     : socket_(std::move(socket)),
       websocket_handler_(std::move(websocket_handler)),
       http_request_(std::move(http_request_struct)),
-      http_session_(http_session) {
+      http_session_(std::move(http_session)) {
 }
 
 void websocket_session::start() {
@@ -175,7 +169,9 @@ void websocket_session::dispatch(websocket_opcode opcode) {
     switch (opcode) {
         case websocket_opcode::text: {
             std::string message(payload_.begin(), payload_.end());
-            on_message_(message);
+            if (on_message_) {
+                on_message_(message);
+            }
             break;
         }
         case websocket_opcode::binary:
@@ -185,7 +181,9 @@ void websocket_session::dispatch(websocket_opcode opcode) {
             break;
         case websocket_opcode::close:
             send_close();
-            on_close_();
+            if (on_close_) {
+                on_close_();
+            }
             socket_.close();
             break;
         default:

@@ -58,7 +58,12 @@ int main() {
             ws->send_text(message);
         });
         ws->on_handshake([ws](http_request_struct http_request_struct) {
-            ws->send_text("欢迎" + ws->http_session_->find("username")->second + "登录websocket");
+            auto it = ws->http_session_->find("username");
+            if (it == ws->http_session_->end()) {
+                ws->send_close();
+                return;
+            }
+            ws->send_text("欢迎" + it->second + "登录websocket");
         });
 
         ws->on_close([ws] {

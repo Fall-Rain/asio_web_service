@@ -25,7 +25,6 @@ add_executable(asio_demo
         web/middleware/cookie_middleware.h
         web/middleware/session_middleware.h
         web/middleware/log_middleware.h
-        web/middleware/websocket_middlesare.h
         web/websocket_session.cpp
         web/websocket_session.h
         web/websocket_struct.cpp

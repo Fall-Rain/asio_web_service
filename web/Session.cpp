@@ -12,7 +12,6 @@
 #include "middleware/process_content_type_middleware.h"
 #include "middleware/process_params_middleware.h"
 #include "middleware/session_middleware.h"
-#include "middleware/websocket_middlesare.h"
 #include "boost/regex.hpp"
 #include "iostream"
 typedef std::string string;
@@ -38,29 +37,6 @@ void Session::start() {
     do_read();
 }
 
-
-// void Session::add_middleware(std::shared_ptr<middleware> m) {
-//     middlewares_.push_back(m);
-// }
-//
-// void Session::run_middlewares() {
-//     run_next(0);
-// }
-//
-//
-// void Session::run_next(size_t index) {
-//     if (index < middlewares_.size()) {
-//         middlewares_[index].get()->handle(shared_from_this(), [this,index] {
-//             run_next(index + 1);
-//         });
-//     } else {
-//         try {
-//             response = business_logic::process_request(request);
-//         } catch (const std::exception &e) {
-//             response.body = e.what();
-//         }
-//     }
-// }
 
 void Session::websocket_handshake() {
     auto secWebsocketKey = request.headers.find("Sec-WebSocket-Key")->second;
