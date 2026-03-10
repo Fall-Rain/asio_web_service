@@ -12,6 +12,9 @@
 #include "middleware/process_content_type_middleware.h"
 #include "middleware/process_params_middleware.h"
 #include "middleware/session_middleware.h"
+#include <openssl/evp.h>
+#include <boost/algorithm/string/case_conv.hpp>
+#include <openssl/sha.h>
 #include "boost/regex.hpp"
 #include "iostream"
 typedef std::string string;
