@@ -3,7 +3,7 @@
 //
 
 #include "../Session.h"
-
+#include <iostream>
 class log_middleware {
 public:
     void handle(std::shared_ptr<Session> session, std::function<void()> next) {

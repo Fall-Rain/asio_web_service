@@ -21,7 +21,6 @@ public:
         session->response.headers["Upgrade"] = "websocket";
         session->response.headers["Connection"] = "Upgrade";
         session->response.headers["Sec-WebSocket-Accept"] = base64_encode(sha1(secWebsocketKey + magic));
-        session->upgrade_to_websocket = true;
     };
 
 private:

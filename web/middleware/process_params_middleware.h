@@ -2,6 +2,8 @@
 // Created by fallrain on 2026/2/25.
 //
 
+#include <numeric>
+
 #include "../Session.h"
 typedef std::string string;
 

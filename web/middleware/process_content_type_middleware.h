@@ -2,6 +2,9 @@
 // Created by fallrain on 2026/2/25.
 //
 #include "../Session.h"
+#include "boost/property_tree/json_parser.hpp"
+#include "boost/property_tree/xml_parser.hpp"
+#include "boost/regex.hpp"
 typedef std::string string;
 
 class process_content_type_middleware  {

@@ -13,19 +13,14 @@
 #include "middleware/process_params_middleware.h"
 #include "middleware/session_middleware.h"
 #include "middleware/websocket_middlesare.h"
-
+#include "boost/regex.hpp"
+#include "iostream"
 typedef std::string string;
 
 
-Session::Session(boost::asio::ip::tcp::socket &socket) : client_socket_(std::move(socket)) {
-    // add_middleware(std::make_shared<process_params_middleware>());
-    // add_middleware(std::make_shared<process_content_type_middleware>());
-    // add_middleware(std::make_shared<log_middleware>());
-    // add_middleware(std::make_shared<cros_middleware>());
-    // add_middleware(std::make_shared<websocket_middlesare>());
-    // add_middleware(std::make_shared<cookie_middleware>());
-    // add_middleware(std::make_shared<session_middleware>());
+Session::Session(boost::asio::ip::tcp::socket socket, route &route) : client_socket_(std::move(socket)), route_(route) {
 }
+
 
 void Session::run_middlewares() {
     middleware_chain<
@@ -66,6 +61,25 @@ void Session::start() {
 //         }
 //     }
 // }
+
+void Session::websocket_handshake() {
+    auto secWebsocketKey = request.headers.find("Sec-WebSocket-Key")->second;
+    response.http_status = HttpStatusCode::SWITCHING_PROTOCOLS;
+    response.headers["Upgrade"] = "websocket";
+    response.headers["Connection"] = "Upgrade";
+    response.headers["Sec-WebSocket-Accept"] = base64_encode(sha1(secWebsocketKey + magic));
+}
+
+std::shared_ptr<websocket_session> Session::upgrade_to_websocket() {
+    if (!is_websocket_request()) {
+        throw std::runtime_error("not websocket request");
+    }
+    websocket_handshake();
+    do_write();
+    auto websocekt = std::make_shared<websocket_session>(client_socket_);
+    websocekt->start();
+    return websocekt;
+}
 
 void Session::do_read_header() {
     boost::asio::async_read_until(
@@ -115,6 +129,7 @@ void Session::do_read_header() {
         });
 }
 
+
 void Session::do_read_body() {
     auto &[headers, params, form_data, cookie_map, json_map, session_id, method,
         body, uri, http_version,http_body] = request;
@@ -123,10 +138,10 @@ void Session::do_read_body() {
     if (content_length_it == headers.end()) {
         run_middlewares();
         do_write();
-        if (upgrade_to_websocket) {
-            auto ws = std::make_shared<websocket_session>(client_socket_);
-            ws->start();
-        }
+        // if (upgrade_to_websocket) {
+        //     auto ws = std::make_shared<websocket_session>(client_socket_);
+        //     ws->start();
+        // }
         return;
     }
 
@@ -141,10 +156,10 @@ void Session::do_read_body() {
         request.http_body += body;
         run_middlewares();
         do_write();
-        if (upgrade_to_websocket) {
-            auto ws = std::make_shared<websocket_session>(client_socket_);
-            ws->start();
-        }
+        // if (upgrade_to_websocket) {
+        //     auto ws = std::make_shared<websocket_session>(client_socket_);
+        //     ws->start();
+        // }
         return;
     }
 
@@ -166,10 +181,10 @@ void Session::do_read_body() {
             self->request.http_body += body;
             self->run_middlewares();
             self->do_write();
-            if (self->upgrade_to_websocket) {
-                auto ws = std::make_shared<websocket_session>(self->client_socket_);
-                ws->start();
-            }
+            // if (self->upgrade_to_websocket) {
+            // auto ws = std::make_shared<websocket_session>(self->client_socket_);
+            // ws->start();
+            // }
         });
 }
 
@@ -178,6 +193,56 @@ void Session::do_read() {
     do_read_header();
 }
 
+
+bool Session::is_websocket_request() {
+    if (request.method != HttpMethod::GET) {
+        return false;
+    }
+    if (request.headers.find("Upgrade") == request.headers.end()
+        || request.headers.find("Connection") == request.headers.end()
+        || request.headers.find("Sec-WebSocket-Key") == request.headers.end()
+        || request.headers.find("Sec-WebSocket-Version") == request.headers.end()) {
+        return false;
+    }
+    auto upgrade = request.headers.find("Upgrade")->second;
+    auto connection = request.headers.find("Connection")->second;
+    auto version = request.headers.find("Sec-WebSocket-Version")->second;
+    boost::to_lower(upgrade);
+    if (upgrade != "websocket") {
+        return false;
+    }
+    if (connection.find("Upgrade") == std::string::npos) {
+        return false;
+    }
+    if (version != "13") {
+        return false;
+    }
+    return true;
+}
+
+std::string Session::base64_encode(const std::string &input) {
+    int len = 4 * ((input.size() + 2) / 3);
+    std::string output(len, '\0');
+
+    int out_len = EVP_EncodeBlock(
+        reinterpret_cast<unsigned char *>(&output[0]),
+        reinterpret_cast<const unsigned char *>(input.data()),
+        input.size());
+
+    output.resize(out_len);
+    return output;
+}
+
+std::string Session::sha1(const std::string &input) {
+    unsigned char hash[SHA_DIGEST_LENGTH];
+
+    SHA1(reinterpret_cast<const unsigned char *>(input.c_str()),
+         input.size(),
+         hash);
+
+    return std::string(reinterpret_cast<char *>(hash),
+                       SHA_DIGEST_LENGTH);
+}
 
 // 执行写入操作，将响应发送给客户端
 void Session::do_write() {

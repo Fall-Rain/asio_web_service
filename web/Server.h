@@ -12,18 +12,18 @@
 
 class Server {
 public:
-    Server(boost::asio::io_context &io_context, std::uint16_t port);
+    Server(boost::asio::io_context &io_context, std::uint16_t port,route &route);
 
     void start();
 
     void stop();
 
 private:
-
     void do_accept();
 
     boost::asio::ip::tcp::acceptor acceptor_;
     ThreadPool pool;
+    route &route_;
 };
 
 
