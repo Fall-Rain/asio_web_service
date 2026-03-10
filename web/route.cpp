@@ -6,16 +6,25 @@
 #include <filesystem>
 #include <fstream>
 
-void route::register_route(HttpMethod method, std::string path, route_handler handler) {
-    routes_[method][path] = handler;
+void route::register_route(HttpMethod method, std::string path, http_handler handler) {
+    http_routes_[method][path] = handler;
 }
 
-void route::post(std::string path, route_handler handler) {
+void route::register_route(std::string path, websocket_handler websocket_handler) {
+    websocket_routes[path] = websocket_handler;
+}
+
+void route::post(std::string path, http_handler handler) {
     register_route(HttpMethod::POST, path, handler);
 }
 
-void route::get(std::string path, route_handler handler) {
+void route::get(std::string path, http_handler handler) {
     register_route(HttpMethod::GET, path, handler);
+}
+
+void route::ws(std::string path, websocket_handler handler) {
+
+    register_route(path, handler);
 }
 
 void route::handle_request(std::shared_ptr<Session> session) {
@@ -25,9 +34,14 @@ void route::handle_request(std::shared_ptr<Session> session) {
         path = path.substr(0, pos);
     }
 
-    auto route = routes_.find(session->request.method)->second.find(path);
-    if (route != routes_.find(session->request.method)->second.end()) {
+    auto route = http_routes_.find(session->request.method)->second.find(path);
+    if (route != http_routes_.find(session->request.method)->second.end()) {
         route->second(session);
+        return;
+    }
+    auto websocket_route = websocket_routes.find(path);
+    if (websocket_route != websocket_routes.end()) {
+        session->upgrade_to_websocket(websocket_route->second);
         return;
     }
     if (session->request.method == HttpMethod::GET) {

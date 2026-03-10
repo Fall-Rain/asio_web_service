@@ -10,19 +10,39 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <vector>
 #include "websocket_struct.h"
-
+#include "http_struct.h"
 
 class websocket_session : public std::enable_shared_from_this<websocket_session> {
 public:
-    websocket_session(boost::asio::ip::tcp::socket &socket);
+    using message_callback = std::function<void(std::string)>;
+
+    using handshake_callback = std::function<void(http_request_struct)>;
+
+    using close_callback = std::function<void()>;
+
+    using websocket_handler = std::function<void(std::shared_ptr<websocket_session>)>;
+
+    websocket_session(
+        boost::asio::ip::tcp::socket socket,
+        http_request_struct http_request_struct,
+        websocket_handler websocket_handler,
+        std::shared_ptr<std::unordered_map<std::string, std::string> > http_session_);
 
     void start();
+
+    void on_message(message_callback message_callback);
+
+    void on_handshake(handshake_callback handshake_callback);
+
+    void on_close(close_callback close_callback);
 
     void send_text(const std::string &msg);
 
     void send_binary(const std::vector<uint8_t> &data);
 
     void send_close(uint16_t code = 1000);
+
+    std::shared_ptr<std::unordered_map<std::string, std::string> > http_session_;
 
 private:
     boost::asio::ip::tcp::socket socket_;
@@ -54,6 +74,12 @@ private:
     void dispatch(websocket_opcode opcode);
 
     void do_write();
+
+    message_callback on_message_;
+    handshake_callback on_handshake_;
+    close_callback on_close_;
+    websocket_handler websocket_handler_;
+    http_request_struct http_request_;
 };
 
 

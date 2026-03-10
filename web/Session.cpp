@@ -28,7 +28,7 @@ void Session::run_middlewares() {
         process_content_type_middleware,
         log_middleware,
         cros_middleware,
-        websocket_middlesare,
+        // websocket_middlesare,
         cookie_middleware,
         session_middleware
     >::run(shared_from_this());
@@ -70,15 +70,14 @@ void Session::websocket_handshake() {
     response.headers["Sec-WebSocket-Accept"] = base64_encode(sha1(secWebsocketKey + magic));
 }
 
-std::shared_ptr<websocket_session> Session::upgrade_to_websocket() {
+
+void Session::upgrade_to_websocket(websocket_handler websocket_handler) {
     if (!is_websocket_request()) {
         throw std::runtime_error("not websocket request");
     }
     websocket_handshake();
-    do_write();
-    auto websocekt = std::make_shared<websocket_session>(client_socket_);
-    websocekt->start();
-    return websocekt;
+    is_upgrade_to_websocket = true;
+    websocket_handler_ = websocket_handler;
 }
 
 void Session::do_read_header() {
@@ -138,10 +137,14 @@ void Session::do_read_body() {
     if (content_length_it == headers.end()) {
         run_middlewares();
         do_write();
-        // if (upgrade_to_websocket) {
-        //     auto ws = std::make_shared<websocket_session>(client_socket_);
-        //     ws->start();
-        // }
+        if (is_upgrade_to_websocket) {
+            auto ws = std::make_shared<websocket_session>(
+                std::move(client_socket_),
+                request,
+                websocket_handler_,
+                http_session);
+            ws->start();
+        }
         return;
     }
 
@@ -156,10 +159,14 @@ void Session::do_read_body() {
         request.http_body += body;
         run_middlewares();
         do_write();
-        // if (upgrade_to_websocket) {
-        //     auto ws = std::make_shared<websocket_session>(client_socket_);
-        //     ws->start();
-        // }
+        if (is_upgrade_to_websocket) {
+            auto ws = std::make_shared<websocket_session>(
+                std::move(client_socket_),
+                request,
+                websocket_handler_,
+                http_session);
+            ws->start();
+        }
         return;
     }
 
@@ -181,10 +188,14 @@ void Session::do_read_body() {
             self->request.http_body += body;
             self->run_middlewares();
             self->do_write();
-            // if (self->upgrade_to_websocket) {
-            // auto ws = std::make_shared<websocket_session>(self->client_socket_);
-            // ws->start();
-            // }
+            if (self->is_upgrade_to_websocket) {
+                auto ws = std::make_shared<websocket_session>(
+                    std::move(self->client_socket_),
+                    self->request,
+                    self->websocket_handler_,
+                    self->http_session);
+                ws->start();
+            }
         });
 }
 
@@ -217,6 +228,7 @@ bool Session::is_websocket_request() {
     if (version != "13") {
         return false;
     }
+    is_upgrade_to_websocket = true;
     return true;
 }
 
