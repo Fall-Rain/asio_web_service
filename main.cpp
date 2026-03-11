@@ -1,15 +1,15 @@
 #include "dao.h"
 #include "web/Server.h"
 #include "web/result.h"
-#include "web/route.h"
+#include "web/router.h"
 #include  <iostream>
 
-#include "web/http_session_manage.h"
+#include "web/session_manage.h"
 
 int main() {
-    route route;
+    router route;
 
-    route.post("/login", [](std::shared_ptr<Session> session) {
+    route.post("/login", [](std::shared_ptr<connection> session) {
         auto username = session->request.ptree.get<std::string>("username");
         auto password = session->request.ptree.get<std::string>("password");
         auto user = dao::getone(username);
@@ -35,7 +35,7 @@ int main() {
         };
     });
 
-    route.post("/body", [](std::shared_ptr<Session> session) {
+    route.post("/body", [](std::shared_ptr<connection> session) {
         auto http_session = session->http_session->find("username");
         if (http_session == session->http_session->end()) {
             session->response = {
@@ -52,7 +52,7 @@ int main() {
     });
 
 
-    route.ws("/chat", [](std::shared_ptr<websocket_session> ws) {
+    route.ws("/chat", [](std::shared_ptr<websocket_connection> ws) {
         ws->on_message([ws](const std::string &message) {
             std::cout << "收到消息：" << message << std::endl;
             ws->send_text(message);
@@ -72,9 +72,7 @@ int main() {
         });
     });
 
-    boost::asio::io_context io_context;
-    Server server(io_context, 8090, route);
+    Server server(8090, route);
     server.start();
-    io_context.run();
     server.stop();
 }

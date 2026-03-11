@@ -12,9 +12,9 @@ using http_session_data = std::unordered_map<std::string, std::string>;
 
 using http_session_ptr = std::shared_ptr<http_session_data>;
 
-class http_session_manage {
+class session_manage {
 public:
-    static http_session_manage &instance();
+    static session_manage &instance();
 
     http_session_ptr get_session(const std::string &session_id);
 
@@ -27,7 +27,7 @@ private:
     std::unordered_map<std::string, http_session_ptr> sessions_;
 
 
-    http_session_manage() = default;
+    session_manage() = default;
 
     std::mutex mutex_;
 };

@@ -1,13 +1,13 @@
 //
 // Created by fallrain on 2026/2/26.
 //
-#include "../Session.h"
+#include "../connection.h"
 
 typedef std::string string;
 
 class cookie_middleware {
 public:
-    void handle(std::shared_ptr<Session> session, std::function<void()> next) {
+    void handle(std::shared_ptr<connection> session, std::function<void()> next) {
         auto header_cookie = session->request.headers.find("Cookie");
         // 解析Cookie头部
         if (header_cookie != session->request.headers.end()) {

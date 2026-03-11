@@ -7,12 +7,12 @@
 #include <functional>
 #include <memory>
 
-#include "Session.h"
+#include "connection.h"
 
-using http_handler = std::function<void(std::shared_ptr<Session>)>;
-using websocket_handler = std::function<void(std::shared_ptr<websocket_session>)>;
+using http_handler = std::function<void(std::shared_ptr<connection>)>;
+using websocket_handler = std::function<void(std::shared_ptr<websocket_connection>)>;
 
-class route {
+class router {
 public:
     void set_root(std::string root);
 
@@ -22,7 +22,7 @@ public:
 
     void ws(std::string path, websocket_handler handler);
 
-    void handle_request(std::shared_ptr<Session> session);
+    void handle_request(std::shared_ptr<connection> session);
 
 private:
     void register_route(HttpMethod method, std::string path,

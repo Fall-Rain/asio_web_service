@@ -2,8 +2,8 @@
 // Created by fallrain on 2026/2/26.
 //
 
-#include "../Session.h"
-#include "../http_session_manage.h"
+#include "../connection.h"
+#include "../session_manage.h"
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -11,7 +11,7 @@ typedef std::string string;
 
 class session_middleware {
 public:
-    void handle(std::shared_ptr<Session> session, std::function<void()> next) {
+    void handle(std::shared_ptr<connection> session, std::function<void()> next) {
         if (session->request.method == HttpMethod::OPTIONS) {
             next();
             return;
@@ -27,7 +27,7 @@ public:
         }
 
 
-        session->http_session = http_session_manage::instance().get_session(session_id);
+        session->http_session = session_manage::instance().get_session(session_id);
 
         // if (it == session->request.cookie.end()) {
         //     session_id = business_logic::create_session_map();

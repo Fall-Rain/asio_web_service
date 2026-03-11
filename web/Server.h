@@ -4,7 +4,7 @@
 
 #ifndef ASIO_DEMO_SERVER_H
 
-#include "Session.h"
+#include "connection.h"
 #include "ThreadPool.h"
 
 #define ASIO_DEMO_SERVER_H
@@ -12,7 +12,9 @@
 
 class Server {
 public:
-    Server(boost::asio::io_context &io_context, std::uint16_t port,route &route);
+    // Server(boost::asio::io_context &io_context, std::uint16_t port, route &route);
+
+    Server(std::uint16_t port, router &route);
 
     void start();
 
@@ -20,10 +22,10 @@ public:
 
 private:
     void do_accept();
-
+    std::shared_ptr<boost::asio::io_context> io_context_;
     boost::asio::ip::tcp::acceptor acceptor_;
     ThreadPool pool;
-    route &route_;
+    router &route_;
 };
 
 

@@ -2,11 +2,11 @@
 // Created by fallrain on 2026/2/25.
 //
 
-#include "../Session.h"
+#include "../connection.h"
 
 class cros_middleware {
 public:
-    void handle(std::shared_ptr<Session> session, std::function<void()> next) {
+    void handle(std::shared_ptr<connection> session, std::function<void()> next) {
         next();
         session->response.headers["Access-Control-Allow-Origin"] = "http://localhost:5173"; // 允许所有域访问
         session->response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS";

@@ -6,7 +6,7 @@
 #define ASIO_DEMO_MIDDLEWARE_CHAIN_H
 #include <boost/type.hpp>
 
-#include "../route.h"
+#include "../router.h"
 
 template<typename... middlewares>
 class middleware_chain;
@@ -26,7 +26,7 @@ public:
 template<>
 class middleware_chain<> {
 public:
-    static void run(std::shared_ptr<Session> session) {
+    static void run(std::shared_ptr<connection> session) {
         try {
             session->route_.handle_request(session);
             // session->response = business_logic::process_request(session->request);

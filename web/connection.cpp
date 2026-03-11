@@ -2,9 +2,9 @@
 // Created by fallrain on 2023/4/20.
 //
 
-#include "Session.h"
+#include "connection.h"
 
-#include "websocket_session.h"
+#include "websocket_connection.h"
 #include "middleware/cookie_middleware.h"
 #include "middleware/cros_middleware.h"
 #include "middleware/log_middleware.h"
@@ -20,11 +20,11 @@
 typedef std::string string;
 
 
-Session::Session(boost::asio::ip::tcp::socket socket, route &route) : client_socket_(std::move(socket)), route_(route) {
+connection::connection(boost::asio::ip::tcp::socket socket, router &route) : client_socket_(std::move(socket)), route_(route) {
 }
 
 
-void Session::run_middlewares() {
+void connection::run_middlewares() {
     middleware_chain<
         process_params_middleware,
         process_content_type_middleware,
@@ -36,12 +36,12 @@ void Session::run_middlewares() {
     >::run(shared_from_this());
 }
 
-void Session::start() {
+void connection::start() {
     do_read();
 }
 
 
-void Session::websocket_handshake() {
+void connection::websocket_handshake() {
     auto secWebsocketKey = request.headers.find("Sec-WebSocket-Key")->second;
     response.http_status = HttpStatusCode::SWITCHING_PROTOCOLS;
     response.headers["Upgrade"] = "websocket";
@@ -50,7 +50,7 @@ void Session::websocket_handshake() {
 }
 
 
-void Session::upgrade_to_websocket(websocket_handler websocket_handler) {
+void connection::upgrade_to_websocket(websocket_handler websocket_handler) {
     if (!is_websocket_request()) {
         throw std::runtime_error("not websocket request");
     }
@@ -59,7 +59,7 @@ void Session::upgrade_to_websocket(websocket_handler websocket_handler) {
     websocket_handler_ = websocket_handler;
 }
 
-void Session::do_read_header() {
+void connection::do_read_header() {
     boost::asio::async_read_until(
         client_socket_, client_buffer_, "\r\n\r\n",
         // 读取完成后的回调函数
@@ -108,7 +108,7 @@ void Session::do_read_header() {
 }
 
 
-void Session::do_read_body() {
+void connection::do_read_body() {
     auto &[headers, params, form_data, cookie_map, json_map, session_id, method,
         body, uri, http_version,http_body] = request;
     // 检查是否有请求体
@@ -117,7 +117,7 @@ void Session::do_read_body() {
         run_middlewares();
         do_write();
         if (is_upgrade_to_websocket) {
-            auto ws = std::make_shared<websocket_session>(
+            auto ws = std::make_shared<websocket_connection>(
                 std::move(client_socket_),
                 request,
                 websocket_handler_,
@@ -139,7 +139,7 @@ void Session::do_read_body() {
         run_middlewares();
         do_write();
         if (is_upgrade_to_websocket) {
-            auto ws = std::make_shared<websocket_session>(
+            auto ws = std::make_shared<websocket_connection>(
                 std::move(client_socket_),
                 request,
                 websocket_handler_,
@@ -168,7 +168,7 @@ void Session::do_read_body() {
             self->run_middlewares();
             self->do_write();
             if (self->is_upgrade_to_websocket) {
-                auto ws = std::make_shared<websocket_session>(
+                auto ws = std::make_shared<websocket_connection>(
                     std::move(self->client_socket_),
                     self->request,
                     self->websocket_handler_,
@@ -179,12 +179,12 @@ void Session::do_read_body() {
 }
 
 // 执行读取操作，从客户端读取请求
-void Session::do_read() {
+void connection::do_read() {
     do_read_header();
 }
 
 
-bool Session::is_websocket_request() {
+bool connection::is_websocket_request() {
     if (request.method != HttpMethod::GET) {
         return false;
     }
@@ -211,7 +211,7 @@ bool Session::is_websocket_request() {
     return true;
 }
 
-std::string Session::base64_encode(const std::string &input) {
+std::string connection::base64_encode(const std::string &input) {
     int len = 4 * ((input.size() + 2) / 3);
     std::string output(len, '\0');
 
@@ -224,7 +224,7 @@ std::string Session::base64_encode(const std::string &input) {
     return output;
 }
 
-std::string Session::sha1(const std::string &input) {
+std::string connection::sha1(const std::string &input) {
     unsigned char hash[SHA_DIGEST_LENGTH];
 
     SHA1(reinterpret_cast<const unsigned char *>(input.c_str()),
@@ -236,7 +236,7 @@ std::string Session::sha1(const std::string &input) {
 }
 
 // 执行写入操作，将响应发送给客户端
-void Session::do_write() {
+void connection::do_write() {
     // 异步写入响应到客户端
     boost::asio::async_write(client_socket_, boost::asio::buffer(shared_from_this()->response.to_http_string()),
                              [self = shared_from_this()](std::error_code ec, std::size_t length) {

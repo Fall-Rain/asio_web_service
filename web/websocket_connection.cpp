@@ -2,7 +2,7 @@
 // Created by fallrain on 2026/3/4.
 //
 
-#include "websocket_session.h"
+#include "websocket_connection.h"
 
 #include <boost/asio/read.hpp>
 #include <boost/beast/http/message.hpp>
@@ -12,7 +12,7 @@
 #include "iostream"
 
 
-websocket_session::websocket_session(boost::asio::ip::tcp::socket socket, http_request_struct http_request_struct,
+websocket_connection::websocket_connection(boost::asio::ip::tcp::socket socket, http_request_struct http_request_struct,
                                      websocket_handler websocket_handler,
                                      std::shared_ptr<std::unordered_map<std::string, std::string> > http_session)
     : socket_(std::move(socket)),
@@ -21,7 +21,7 @@ websocket_session::websocket_session(boost::asio::ip::tcp::socket socket, http_r
       http_session_(std::move(http_session)) {
 }
 
-void websocket_session::start() {
+void websocket_connection::start() {
     websocket_handler_(shared_from_this());
     if (on_handshake_) {
         on_handshake_(http_request_);
@@ -29,35 +29,35 @@ void websocket_session::start() {
     on_read_frame();
 }
 
-void websocket_session::on_message(message_callback message_callback) {
+void websocket_connection::on_message(message_callback message_callback) {
     on_message_ = std::move(message_callback);
 }
 
-void websocket_session::on_handshake(handshake_callback handshake_callback) {
+void websocket_connection::on_handshake(handshake_callback handshake_callback) {
     on_handshake_ = std::move(handshake_callback);
 }
 
-void websocket_session::on_close(close_callback close_callback) {
+void websocket_connection::on_close(close_callback close_callback) {
     on_close_ = close_callback;
 }
 
-void websocket_session::send_text(const std::string &msg) {
+void websocket_connection::send_text(const std::string &msg) {
     std::vector<uint8_t> data(msg.begin(), msg.end());
     send_frame(websocket_opcode::text, data);
 }
 
-void websocket_session::send_binary(const std::vector<uint8_t> &data) {
+void websocket_connection::send_binary(const std::vector<uint8_t> &data) {
     send_frame(websocket_opcode::binary, data);
 }
 
-void websocket_session::send_close(uint16_t code) {
+void websocket_connection::send_close(uint16_t code) {
     std::vector<uint8_t> payload;
     payload.push_back((code >> 8) & 0xFF);
     payload.push_back(code & 0xFF);
     send_frame(websocket_opcode::close, payload);
 }
 
-void websocket_session::on_read_frame() {
+void websocket_connection::on_read_frame() {
     buffer_.resize(2);
     boost::asio::async_read(
         socket_, boost::asio::buffer(buffer_),
@@ -70,7 +70,7 @@ void websocket_session::on_read_frame() {
         });
 }
 
-void websocket_session::handler_header() {
+void websocket_connection::handler_header() {
     fin_ = (buffer_[0] & 0x80) >> 7;
     opcode_ = static_cast<websocket_opcode>(buffer_[0] & 0x0f);
     mask_ = (buffer_[1] & 0x80) >> 7;
@@ -83,7 +83,7 @@ void websocket_session::handler_header() {
     }
 }
 
-void websocket_session::read_mask() {
+void websocket_connection::read_mask() {
     if (!mask_) {
         read_payload();
         return;
@@ -99,7 +99,7 @@ void websocket_session::read_mask() {
         });
 }
 
-void websocket_session::read_payload() {
+void websocket_connection::read_payload() {
     payload_.resize(payload_length_);
     boost::asio::async_read(
         socket_, boost::asio::buffer(payload_),
@@ -119,7 +119,7 @@ void websocket_session::read_payload() {
         });
 }
 
-void websocket_session::read_extended_length() {
+void websocket_connection::read_extended_length() {
     size_t ext_bytes = (payload_length_ == 126) ? 2 : 8;
     buffer_.resize(ext_bytes);
     boost::asio::async_read(socket_, boost::asio::buffer(buffer_),
@@ -138,7 +138,7 @@ void websocket_session::read_extended_length() {
                             });
 }
 
-void websocket_session::send_frame(websocket_opcode opcode,
+void websocket_connection::send_frame(websocket_opcode opcode,
                                    const std::vector<uint8_t> &payload) {
     std::vector<uint8_t> frame;
     uint8_t fin_opencode = 0x80 | static_cast<uint8_t>(opcode);
@@ -165,7 +165,7 @@ void websocket_session::send_frame(websocket_opcode opcode,
     }
 }
 
-void websocket_session::dispatch(websocket_opcode opcode) {
+void websocket_connection::dispatch(websocket_opcode opcode) {
     switch (opcode) {
         case websocket_opcode::text: {
             std::string message(payload_.begin(), payload_.end());
@@ -191,7 +191,7 @@ void websocket_session::dispatch(websocket_opcode opcode) {
     }
 }
 
-void websocket_session::do_write() {
+void websocket_connection::do_write() {
     boost::asio::async_write(
         socket_, boost::asio::buffer(write_queue_.front()),
         [self = shared_from_this()](boost::system::error_code ec, std::size_t) {

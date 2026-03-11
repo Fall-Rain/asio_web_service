@@ -16,7 +16,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 
 add_executable(asio_demo
-        main.cpp web/ThreadPool.cpp web/ThreadPool.h web/Session.cpp web/Session.h web/Server.cpp web/Server.h web/http_struct.h web/http_struct.cpp entity/user.cpp entity/user.h web/result.cpp web/result.h
+        main.cpp web/ThreadPool.cpp web/ThreadPool.h web/connection.cpp web/connection.h web/Server.cpp web/Server.h web/http_protocol.h web/http_protocol.cpp entity/user.cpp entity/user.h web/result.cpp web/result.h
         dao.cpp
         dao.h
         web/middleware/process_params_middleware.h
@@ -25,15 +25,17 @@ add_executable(asio_demo
         web/middleware/cookie_middleware.h
         web/middleware/session_middleware.h
         web/middleware/log_middleware.h
-        web/websocket_session.cpp
-        web/websocket_session.h
-        web/websocket_struct.cpp
-        web/websocket_struct.h
+        web/websocket_connection.cpp
+        web/websocket_connection.h
+        web/websocket_frame.cpp
+        web/websocket_frame.h
         web/middleware/middleware_chain.h
-        web/route.cpp
-        web/route.h
-        web/http_session_manage.cpp
-        web/http_session_manage.h
+        web/router.cpp
+        web/router.h
+        web/session_manage.cpp
+        web/session_manage.h
+        websocket_manager.cpp
+        websocket_manager.h
 )
 target_link_libraries(asio_demo
         Boost::system

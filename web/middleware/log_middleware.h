@@ -2,11 +2,11 @@
 // Created by fallrain on 2026/2/26.
 //
 
-#include "../Session.h"
+#include "../connection.h"
 #include <iostream>
 class log_middleware {
 public:
-    void handle(std::shared_ptr<Session> session, std::function<void()> next) {
+    void handle(std::shared_ptr<connection> session, std::function<void()> next) {
         std::cout << "请求："
                 << std::endl
                 << session->request.to_http_string()

@@ -2,31 +2,31 @@
 // Created by fallrain on 2026/3/9.
 //
 
-#include "route.h"
+#include "router.h"
 #include <filesystem>
 #include <fstream>
 
-void route::register_route(HttpMethod method, std::string path, http_handler handler) {
+void router::register_route(HttpMethod method, std::string path, http_handler handler) {
     http_routes_[method][path] = handler;
 }
 
-void route::register_route(std::string path, websocket_handler websocket_handler) {
+void router::register_route(std::string path, websocket_handler websocket_handler) {
     websocket_routes[path] = websocket_handler;
 }
 
-void route::post(std::string path, http_handler handler) {
+void router::post(std::string path, http_handler handler) {
     register_route(HttpMethod::POST, path, handler);
 }
 
-void route::get(std::string path, http_handler handler) {
+void router::get(std::string path, http_handler handler) {
     register_route(HttpMethod::GET, path, handler);
 }
 
-void route::ws(std::string path, websocket_handler handler) {
+void router::ws(std::string path, websocket_handler handler) {
     register_route(path, handler);
 }
 
-void route::handle_request(std::shared_ptr<Session> session) {
+void router::handle_request(std::shared_ptr<connection> session) {
     auto path = session->request.uri;
     size_t pos = path.find("?");
     if (pos != std::string::npos) {
@@ -65,6 +65,6 @@ void route::handle_request(std::shared_ptr<Session> session) {
     session->response.http_status = HttpStatusCode::NOT_FOUND;
 }
 
-void route::set_root(std::string root) {
+void router::set_root(std::string root) {
     root_ = root;
 }

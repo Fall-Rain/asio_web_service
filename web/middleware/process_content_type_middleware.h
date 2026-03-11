@@ -1,7 +1,7 @@
 //
 // Created by fallrain on 2026/2/25.
 //
-#include "../Session.h"
+#include "../connection.h"
 #include "boost/property_tree/json_parser.hpp"
 #include "boost/property_tree/xml_parser.hpp"
 #include "boost/regex.hpp"
@@ -9,7 +9,7 @@ typedef std::string string;
 
 class process_content_type_middleware  {
 public:
-    void handle(std::shared_ptr<Session> session, std::function<void()> next) {
+    void handle(std::shared_ptr<connection> session, std::function<void()> next) {
            string body = session->request.body; // 获取请求体
     if (body.empty()) {
         // 如果请求体为空，则直接返回

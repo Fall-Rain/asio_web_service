@@ -9,10 +9,10 @@
 #include <boost/asio/streambuf.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <vector>
-#include "websocket_struct.h"
-#include "http_struct.h"
+#include "websocket_frame.h"
+#include "http_protocol.h"
 
-class websocket_session : public std::enable_shared_from_this<websocket_session> {
+class websocket_connection : public std::enable_shared_from_this<websocket_connection> {
 public:
     using message_callback = std::function<void(std::string)>;
 
@@ -20,9 +20,9 @@ public:
 
     using close_callback = std::function<void()>;
 
-    using websocket_handler = std::function<void(std::shared_ptr<websocket_session>)>;
+    using websocket_handler = std::function<void(std::shared_ptr<websocket_connection>)>;
 
-    websocket_session(
+    websocket_connection(
         boost::asio::ip::tcp::socket socket,
         http_request_struct http_request_struct,
         websocket_handler websocket_handler,

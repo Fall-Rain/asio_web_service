@@ -4,12 +4,12 @@
 
 #include <numeric>
 
-#include "../Session.h"
+#include "../connection.h"
 typedef std::string string;
 
 class process_params_middleware {
 public:
-    void handle(std::shared_ptr<Session> session, std::function<void()> next) {
+    void handle(std::shared_ptr<connection> session, std::function<void()> next) {
         size_t pos = session->request.uri.find("?"); // 查找 URI 中的参数部分起始位置
         if (pos == std::string::npos) {
             // 如果没有找到参数部分，直接返回
