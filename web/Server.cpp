@@ -6,13 +6,12 @@
 #include "middleware/cookie_middleware.h"
 
 
-
 Server::Server(std::uint16_t port, router &route) : io_context_(std::make_shared<boost::asio::io_context>()),
-                                                   acceptor_(*io_context_,
-                                                             boost::asio::ip::tcp::endpoint(
-                                                                 boost::asio::ip::tcp::v4(), port)),
-                                                   pool(std::thread::hardware_concurrency(), *io_context_),
-                                                   route_(route) {
+                                                    acceptor_(*io_context_,
+                                                              boost::asio::ip::tcp::endpoint(
+                                                                  boost::asio::ip::tcp::v4(), port)),
+                                                    pool(std::thread::hardware_concurrency(), *io_context_),
+                                                    route_(route) {
 }
 
 void Server::start() {
@@ -25,6 +24,7 @@ void Server::stop() {
     pool.stop();
     io_context_->stop();
 }
+
 
 void Server::do_accept() {
     acceptor_.async_accept(

@@ -36,6 +36,8 @@ add_executable(asio_demo
         web/session_manage.h
         websocket_manager.cpp
         websocket_manager.h
+        web/asio_stream.cpp
+        web/asio_stream.h
 )
 target_link_libraries(asio_demo
         Boost::system
