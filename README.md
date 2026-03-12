@@ -1,4 +1,4 @@
-# OHD HTTP Server
+# RAIN HTTP Server
 
 A high-performance C++ Web framework built on top of Boost.Asio.
 
