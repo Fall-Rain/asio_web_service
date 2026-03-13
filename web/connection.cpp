@@ -14,13 +14,15 @@
 #include "middleware/session_middleware.h"
 #include <openssl/evp.h>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <utility>
 #include <openssl/sha.h>
 #include "boost/regex.hpp"
 #include "iostream"
 typedef std::string string;
 
 
-connection::connection(boost::asio::ip::tcp::socket socket, routers &route) : client_socket_(std::move(socket)), route_(route) {
+connection::connection(boost::asio::ip::tcp::socket socket, routers &route) : client_socket_(std::move(socket)),
+                                                                              route_(route) {
 }
 
 
@@ -56,7 +58,7 @@ void connection::upgrade_to_websocket(websocket_handler websocket_handler) {
     }
     websocket_handshake();
     is_upgrade_to_websocket = true;
-    websocket_handler_ = websocket_handler;
+    websocket_handler_ = std::move(websocket_handler);
 }
 
 void connection::do_read_header() {
@@ -126,6 +128,7 @@ void connection::do_read_body() {
         }
         return;
     }
+
 
     std::size_t content_length = std::stoi(content_length_it->second);
 
@@ -237,8 +240,10 @@ std::string connection::sha1(const std::string &input) {
 
 // 执行写入操作，将响应发送给客户端
 void connection::do_write() {
+    auto self = shared_from_this();
+    auto data = std::make_shared<std::string>(self->response.to_http_string());
     // 异步写入响应到客户端
-    boost::asio::async_write(client_socket_, boost::asio::buffer(shared_from_this()->response.to_http_string()),
+    boost::asio::async_write(client_socket_, boost::asio::buffer(*data),
                              [self = shared_from_this()](std::error_code ec, std::size_t length) {
                                  if (ec) {
                                      std::cerr << "write to remote server error: " << ec.message() << std::endl;

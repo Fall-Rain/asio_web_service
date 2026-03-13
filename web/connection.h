@@ -68,6 +68,7 @@ private:
 
     // 客户端socket
     boost::asio::ip::tcp::socket client_socket_;
+
     // 客服端的buffer
     boost::asio::streambuf client_buffer_;
 

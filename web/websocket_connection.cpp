@@ -89,6 +89,7 @@ void websocket_connection::read_mask() {
         return;
     }
     mask_key_.resize(4);
+
     boost::asio::async_read(
         socket_, boost::asio::buffer(mask_key_),
         [self = shared_from_this()](boost::system::error_code ec, size_t size) {
