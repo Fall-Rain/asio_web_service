@@ -148,7 +148,7 @@ void websocket_connection::send_frame(websocket_opcode opcode,
         frame.push_back(static_cast<uint8_t>(len));
     } else if (len <= 0xffff) {
         frame.push_back(126);
-        frame.push_back((len >> 8) & 0xff);
+        frame.push_back(len >> 8 & 0xff);
         frame.push_back(len & 0xff);
     } else {
         frame.push_back(127);

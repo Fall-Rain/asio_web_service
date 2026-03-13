@@ -28,7 +28,7 @@ public:
 
 
         session->http_session = session_manage::instance().get_session(session_id);
-
+        session->request.session_id = session_id;
         // if (it == session->request.cookie.end()) {
         //     session_id = business_logic::create_session_map();
         //     need_set_cookie = true;

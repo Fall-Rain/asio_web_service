@@ -14,7 +14,7 @@ class Server {
 public:
     // Server(boost::asio::io_context &io_context, std::uint16_t port, route &route);
 
-    Server(std::uint16_t port, router &route);
+    Server(std::uint16_t port, routers &route);
 
     void start();
 
@@ -25,7 +25,7 @@ private:
     std::shared_ptr<boost::asio::io_context> io_context_;
     boost::asio::ip::tcp::acceptor acceptor_;
     ThreadPool pool;
-    router &route_;
+    routers &route_;
 };
 
 

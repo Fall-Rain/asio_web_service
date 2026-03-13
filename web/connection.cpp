@@ -20,7 +20,7 @@
 typedef std::string string;
 
 
-connection::connection(boost::asio::ip::tcp::socket socket, router &route) : client_socket_(std::move(socket)), route_(route) {
+connection::connection(boost::asio::ip::tcp::socket socket, routers &route) : client_socket_(std::move(socket)), route_(route) {
 }
 
 

@@ -14,11 +14,11 @@
 #include <boost/asio/ip/tcp.hpp>
 #include "session_manage.h"
 
-class router;
+class routers;
 
 class connection : public std::enable_shared_from_this<connection> {
 public:
-    connection(boost::asio::ip::tcp::socket socket, router &route);
+    connection(boost::asio::ip::tcp::socket socket, routers &route);
 
     using websocket_handler = std::function<void(std::shared_ptr<websocket_connection>)>;
 
@@ -41,7 +41,7 @@ public:
 
     void websocket_handshake();
 
-    router &route_;
+    routers &route_;
 
     void upgrade_to_websocket(websocket_handler websocket_handler);
 

@@ -12,23 +12,23 @@
 using http_handler = std::function<void(std::shared_ptr<connection>)>;
 using websocket_handler = std::function<void(std::shared_ptr<websocket_connection>)>;
 
-class router {
+class routers {
 public:
     void set_root(std::string root);
 
-    void get(std::string path, http_handler handler);
+    void get(const std::string& path, http_handler handler);
 
-    void post(std::string path, http_handler handler);
+    void post(const std::string& path, http_handler handler);
 
-    void ws(std::string path, websocket_handler handler);
+    void ws(const std::string& path, websocket_handler handler);
 
-    void handle_request(std::shared_ptr<connection> session);
+    void handle_request(const std::shared_ptr<connection>& session);
 
 private:
-    void register_route(HttpMethod method, std::string path,
+    void register_route(HttpMethod method, const std::string &path,
                         http_handler handler);
 
-    void register_route(std::string path, websocket_handler websocket_handler);
+    void register_route(const std::string& path, websocket_handler websocket_handler);
 
     std::map<std::string, websocket_handler> websocket_routes = {};
 

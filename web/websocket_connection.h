@@ -44,6 +44,7 @@ public:
 
     std::shared_ptr<std::unordered_map<std::string, std::string> > http_session_;
 
+    http_request_struct http_request_;
 private:
     boost::asio::ip::tcp::socket socket_;
 
@@ -79,7 +80,6 @@ private:
     handshake_callback on_handshake_;
     close_callback on_close_;
     websocket_handler websocket_handler_;
-    http_request_struct http_request_;
 };
 
 

@@ -2,33 +2,34 @@
 // Created by fallrain on 2026/3/9.
 //
 
-#include "router.h"
+#include "routers.h"
 #include <filesystem>
 #include <fstream>
+#include <utility>
 
-void router::register_route(HttpMethod method, std::string path, http_handler handler) {
-    http_routes_[method][path] = handler;
+void routers::register_route(HttpMethod method, const std::string& path, http_handler handler) {
+    http_routes_[method][path] = std::move(handler);
 }
 
-void router::register_route(std::string path, websocket_handler websocket_handler) {
-    websocket_routes[path] = websocket_handler;
+void routers::register_route(const std::string& path, websocket_handler websocket_handler) {
+    websocket_routes[path] = std::move(websocket_handler);
 }
 
-void router::post(std::string path, http_handler handler) {
-    register_route(HttpMethod::POST, path, handler);
+void routers::post(const std::string& path, http_handler handler) {
+    register_route(HttpMethod::POST, path, std::move(handler));
 }
 
-void router::get(std::string path, http_handler handler) {
-    register_route(HttpMethod::GET, path, handler);
+void routers::get(const std::string& path, http_handler handler) {
+    register_route(HttpMethod::GET, path, std::move(handler));
 }
 
-void router::ws(std::string path, websocket_handler handler) {
-    register_route(path, handler);
+void routers::ws(const std::string& path, websocket_handler handler) {
+    register_route(path, std::move(handler));
 }
 
-void router::handle_request(std::shared_ptr<connection> session) {
+void routers::handle_request(const std::shared_ptr<connection>& session) {
     auto path = session->request.uri;
-    size_t pos = path.find("?");
+    size_t pos = path.find('?');
     if (pos != std::string::npos) {
         path = path.substr(0, pos);
     }
@@ -65,6 +66,6 @@ void router::handle_request(std::shared_ptr<connection> session) {
     session->response.http_status = HttpStatusCode::NOT_FOUND;
 }
 
-void router::set_root(std::string root) {
-    root_ = root;
+void routers::set_root(std::string root) {
+    root_ = std::move(root);
 }

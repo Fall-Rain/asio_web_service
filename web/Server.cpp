@@ -6,7 +6,7 @@
 #include "middleware/cookie_middleware.h"
 
 
-Server::Server(std::uint16_t port, router &route) : io_context_(std::make_shared<boost::asio::io_context>()),
+Server::Server(std::uint16_t port, routers &route) : io_context_(std::make_shared<boost::asio::io_context>()),
                                                     acceptor_(*io_context_,
                                                               boost::asio::ip::tcp::endpoint(
                                                                   boost::asio::ip::tcp::v4(), port)),

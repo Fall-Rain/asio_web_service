@@ -1,15 +1,16 @@
 #include "dao.h"
 #include "web/Server.h"
 #include "web/result.h"
-#include "web/router.h"
+#include "web/routers.h"
 #include  <iostream>
 
+#include "websocket_manager.h"
 #include "web/session_manage.h"
 
 int main() {
-    router route;
+    routers routers;
 
-    route.post("/login", [](std::shared_ptr<connection> session) {
+    routers.post("/login", [](const std::shared_ptr<connection>& session) {
         auto username = session->request.ptree.get<std::string>("username");
         auto password = session->request.ptree.get<std::string>("password");
         auto user = dao::getone(username);
@@ -35,7 +36,7 @@ int main() {
         };
     });
 
-    route.post("/body", [](std::shared_ptr<connection> session) {
+    routers.post("/body", [](const std::shared_ptr<connection>& session) {
         auto http_session = session->http_session->find("username");
         if (http_session == session->http_session->end()) {
             session->response = {
@@ -51,28 +52,38 @@ int main() {
         };
     });
 
+    routers.post("/sendBroadcastMessage", [](const std::shared_ptr<connection> &connection) {
+        auto message = connection->request.ptree.get<std::string>("message");
+        websocket_manager::instance().broadcast(message, connection->request.session_id);
+        connection->response = {
+            result("发送成功", 200).to_json_string(),
+            ContentType::APPLICATION_JSON
+        };
+    });
 
-    route.ws("/chat", [](std::shared_ptr<websocket_connection> ws) {
+    routers.ws("/chat", [](const std::shared_ptr<websocket_connection>& ws) {
         ws->on_message([ws](const std::string &message) {
             std::cout << "收到消息：" << message << std::endl;
             ws->send_text(message);
         });
-        ws->on_handshake([ws](http_request_struct http_request_struct) {
+        ws->on_handshake([ws](const http_request_struct& http_request_struct) {
             auto it = ws->http_session_->find("username");
             if (it == ws->http_session_->end()) {
                 ws->send_close();
                 return;
             }
+            websocket_manager::instance().add(ws->http_request_.session_id, ws);
             ws->send_text("欢迎" + it->second + "登录websocket");
         });
 
         ws->on_close([ws] {
+            websocket_manager::instance().remove(ws->http_request_.session_id);
             ws->send_text("再见");
             std::cout << "连接断开" << std::endl;
         });
     });
 
-    Server server(8090, route);
+    Server server(8090, routers);
     server.start();
     server.stop();
 }
