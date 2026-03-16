@@ -39,6 +39,10 @@ public:
     // 写入请求
     void do_write();
 
+    bool should_keep_alive();
+
+    void reset_request();
+
     void websocket_handshake();
 
     routers &route_;

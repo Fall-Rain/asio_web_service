@@ -241,12 +241,49 @@ std::string connection::sha1(const std::string &input) {
 // 执行写入操作，将响应发送给客户端
 void connection::do_write() {
     auto self = shared_from_this();
-    auto data = std::make_shared<std::string>(self->response.to_http_string());
     // 异步写入响应到客户端
-    boost::asio::async_write(client_socket_, boost::asio::buffer(*data),
+    boost::asio::async_write(client_socket_, boost::asio::buffer(self->response.to_http_string()),
                              [self = shared_from_this()](std::error_code ec, std::size_t length) {
                                  if (ec) {
                                      std::cerr << "write to remote server error: " << ec.message() << std::endl;
                                  }
+                                 if (self->should_keep_alive()) {
+                                     self->reset_request();
+                                     self->do_read();
+                                 } else {
+                                     self->client_socket_.close();
+                                     
+                                 }
+                                 // self->client_socket_.close();
                              });
+}
+
+bool connection::should_keep_alive() {
+    auto conn = request.headers.find("Connection");
+
+    if (request.http_version == "HTTP/1.1") {
+        if (conn != request.headers.end()) {
+            std::string v = conn->second;
+            boost::to_lower(v);
+            if (v == "close")
+                return false;
+        }
+        return true;
+    }
+
+    if (request.http_version == "HTTP/1.0") {
+        if (conn != request.headers.end()) {
+            std::string v = conn->second;
+            boost::to_lower(v);
+            if (v == "keep-alive")
+                return true;
+        }
+        return false;
+    }
+    return false;
+}
+
+void connection::reset_request() {
+    request = {};
+    response = {};
 }

@@ -61,26 +61,25 @@ std::string http_response_struct::to_http_string() {
     std::ostringstream response_stream;
     // 获取状态码和状态字符串
     int status_code = static_cast<int>(http_status);
-    std::string status_string = httpStatusToString.at(http_status);
-    std::string contentType = contentTypeToString.at(content_type);
+    const std::string &status_string = httpStatusToString.at(http_status);
 
     // 构建响应头部
-    response_stream << "HTTP/1.1" << " " << status_code << " " << status_string << "\r\n";
+    response_stream
+            << "HTTP/1.1" << " "
+            << status_code << " "
+            << status_string << "\r\n";
 
-    if (headers.count("Server")) {
+    if (!headers.count("Server")) {
         headers["Server"] = "c++ server";
     }
-    if (body.size() > 0 && headers.count("Content-Type")) {
-        headers["Content-Type"] = contentTypeToString.at(ContentType::TEXT_HTML);
+
+    if (!headers.count("Content-Type")) {
+        headers["Content-Type"] = contentTypeToString.at(content_type);
     }
-    // response_stream << "Content-Type: " << contentType << "\r\n";
-    // response_stream << "Server: c++ server" << "\r\n";
+
+    response_stream << "Content-Length: " << body.size() << "\r\n";
     for (auto &item: headers) {
         response_stream << item.first << ": " << item.second << "\r\n";
-    }
-    // 如果内容类型为TEXT_HTML，则添加Content-Length头部
-    if (body.size() > 0) {
-        response_stream << "Content-Length:" << body.size() << "\r\n";
     }
     response_stream << "\r\n"; // 空行，分隔头部和主体
     response_stream << body; // 添加主体内容
